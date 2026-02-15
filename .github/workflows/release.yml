@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags (e.g., v1.0.0, v0.0.1)
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for git describe
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          # Get the tag that triggered this workflow
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          # Remove 'v' prefix if present for version string
+          VERSION=${TAG_NAME#v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+          echo "Tag: $TAG_NAME"
+
+      - name: Build Linux binary
+        run: |
+          GOOS=linux GOARCH=amd64 go build \
+            -ldflags "-X main.version=${{ steps.get_version.outputs.version }} -X main.buildTime=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+            -o gateway-${{ steps.get_version.outputs.version }}-linux-amd64 \
+            ./cmd/server
+
+      - name: Build Windows binary
+        run: |
+          GOOS=windows GOARCH=amd64 go build \
+            -ldflags "-X main.version=${{ steps.get_version.outputs.version }} -X main.buildTime=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+            -o gateway-${{ steps.get_version.outputs.version }}-windows-amd64.exe \
+            ./cmd/server
+
+      - name: Build macOS binary (amd64)
+        run: |
+          GOOS=darwin GOARCH=amd64 go build \
+            -ldflags "-X main.version=${{ steps.get_version.outputs.version }} -X main.buildTime=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+            -o gateway-${{ steps.get_version.outputs.version }}-darwin-amd64 \
+            ./cmd/server
+
+      - name: Build macOS binary (arm64)
+        run: |
+          GOOS=darwin GOARCH=arm64 go build \
+            -ldflags "-X main.version=${{ steps.get_version.outputs.version }} -X main.buildTime=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+            -o gateway-${{ steps.get_version.outputs.version }}-darwin-arm64 \
+            ./cmd/server
+
+      - name: Create checksums
+        run: |
+          sha256sum gateway-* > checksums.txt
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.get_version.outputs.tag }}
+          name: Release ${{ steps.get_version.outputs.tag }}
+          body: |
+            ## Release ${{ steps.get_version.outputs.tag }}
+            
+            ### Binaries
+            
+            - `gateway-${{ steps.get_version.outputs.version }}-linux-amd64` - Linux (amd64)
+            - `gateway-${{ steps.get_version.outputs.version }}-windows-amd64.exe` - Windows (amd64)
+            - `gateway-${{ steps.get_version.outputs.version }}-darwin-amd64` - macOS (Intel)
+            - `gateway-${{ steps.get_version.outputs.version }}-darwin-arm64` - macOS (Apple Silicon)
+            
+            ### Checksums
+            
+            See `checksums.txt` for SHA256 checksums of all binaries.
+          files: |
+            gateway-*
+            checksums.txt
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
