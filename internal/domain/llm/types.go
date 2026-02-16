@@ -1,6 +1,9 @@
 package llm
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 type ChatRequest struct {
 	Model    string
@@ -12,6 +15,7 @@ type ChatResponse struct {
 	ID      string
 	Model   string
 	Content string
+	Raw     json.RawMessage // Raw response from provider
 }
 
 type Role string
@@ -44,9 +48,69 @@ type ChatOptions struct {
 	Verbosity   *Verbosity
 
 	ResponseFormat *ResponseFormat
+
+	FrequencyPenalty *float32
+	PresencePenalty  *float32
+	LogitBias        map[string]int
+	Logprobs         *bool
+	TopLogprobs      *int
+	N                *int
+	Seed             *int
+	User             *string
+
+	Tools             []Tool
+	ToolChoice        interface{} // Can be "none", "auto", or ToolChoice object
+	ParallelToolCalls *bool
+	ToolResolution    *ToolResolution
+
+	Stream        *bool
+	StreamOptions *StreamOptions
 }
 
 type ResponseFormat struct {
 	Type   string
 	Schema json.RawMessage
+}
+
+type Tool struct {
+	Type     string        `json:"type"`
+	Function *FunctionTool `json:"function,omitempty"`
+}
+
+type FunctionTool struct {
+	Name        string          `json:"name"`
+	Description string          `json:"description,omitempty"`
+	Parameters  json.RawMessage `json:"parameters,omitempty"`
+}
+
+type ToolChoice struct {
+	Type     string `json:"type"` // "function"
+	Function *struct {
+		Name string `json:"name"`
+	} `json:"function,omitempty"`
+}
+
+type ToolResolution struct {
+	Type string `json:"type"` // "auto" or "required"
+}
+
+type StreamOptions struct {
+	IncludeUsage *bool `json:"include_usage,omitempty"`
+}
+
+// ProviderError represents an error from a provider with details
+type ProviderError struct {
+	StatusCode int                    `json:"statusCode"`
+	Message    string                 `json:"message"`
+	Type       string                 `json:"type,omitempty"`
+	Code       string                 `json:"code,omitempty"`
+	Param      string                 `json:"param,omitempty"`
+	Raw        json.RawMessage        `json:"raw,omitempty"` // Raw error response from provider
+}
+
+func (e *ProviderError) Error() string {
+	if e.Code != "" {
+		return fmt.Sprintf("provider error [%d]: %s (type: %s, code: %s)", e.StatusCode, e.Message, e.Type, e.Code)
+	}
+	return fmt.Sprintf("provider error [%d]: %s", e.StatusCode, e.Message)
 }

@@ -25,12 +25,49 @@ type ChatRequestPayload struct {
 }
 
 type ChatOptionsPayload struct {
-	Temperature    *float32               `json:"temperature,omitempty"`
-	MaxTokens      *int                   `json:"maxTokens,omitempty"`
-	TopP           *float32               `json:"topP,omitempty"`
-	Stop           []string               `json:"stop,omitempty"`
-	Verbosity      *llm.Verbosity         `json:"verbosity,omitempty"`
+	Temperature *float32       `json:"temperature,omitempty"`
+	MaxTokens   *int           `json:"maxTokens,omitempty"`
+	TopP        *float32       `json:"topP,omitempty"`
+	Stop        []string       `json:"stop,omitempty"`
+	Verbosity   *llm.Verbosity `json:"verbosity,omitempty"`
+
 	ResponseFormat *ResponseFormatPayload `json:"responseFormat,omitempty"`
+
+	FrequencyPenalty *float32       `json:"frequencyPenalty,omitempty"`
+	PresencePenalty  *float32       `json:"presencePenalty,omitempty"`
+	LogitBias        map[string]int `json:"logitBias,omitempty"`
+	Logprobs         *bool          `json:"logprobs,omitempty"`
+	TopLogprobs      *int           `json:"topLogprobs,omitempty"`
+	N                *int           `json:"n,omitempty"`
+	Seed             *int           `json:"seed,omitempty"`
+	User             *string        `json:"user,omitempty"`
+
+	Tools             []ToolPayload          `json:"tools,omitempty"`
+	ToolChoice        interface{}            `json:"toolChoice,omitempty"`
+	ParallelToolCalls *bool                  `json:"parallelToolCalls,omitempty"`
+	ToolResolution    *ToolResolutionPayload `json:"toolResolution,omitempty"`
+
+	Stream        *bool                 `json:"stream,omitempty"`
+	StreamOptions *StreamOptionsPayload `json:"streamOptions,omitempty"`
+}
+
+type ToolPayload struct {
+	Type     string           `json:"type"`
+	Function *FunctionPayload `json:"function,omitempty"`
+}
+
+type FunctionPayload struct {
+	Name        string          `json:"name"`
+	Description string          `json:"description,omitempty"`
+	Parameters  json.RawMessage `json:"parameters,omitempty"`
+}
+
+type ToolResolutionPayload struct {
+	Type string `json:"type"`
+}
+
+type StreamOptionsPayload struct {
+	IncludeUsage *bool `json:"includeUsage,omitempty"`
 }
 
 type ResponseFormatPayload struct {
@@ -39,16 +76,82 @@ type ResponseFormatPayload struct {
 }
 
 type ChatResponsePayload struct {
-	ID      string          `json:"id"`
-	Model   string          `json:"model"`
-	Content string          `json:"content"`
-	Parsed  json.RawMessage `json:"parsed,omitempty"` // Parsed structured response if schema was provided
+	ID                string          `json:"id"`
+	Object            string          `json:"object"`
+	Created           int64           `json:"created"`
+	Model             string          `json:"model"`
+	SystemFingerprint *string         `json:"systemFingerprint,omitempty"`
+	Choices           []ChoicePayload `json:"choices"`
+	Usage             *UsagePayload   `json:"usage,omitempty"`
+	ServiceTier       *string         `json:"serviceTier,omitempty"`
+	Content           string          `json:"content"`          // Convenience field for first choice content
+	Parsed            json.RawMessage `json:"parsed,omitempty"` // Parsed structured response if schema was provided
+	Raw               json.RawMessage `json:"raw,omitempty"`    // Raw response from provider
+}
+
+type ChoicePayload struct {
+	Index        int              `json:"index"`
+	Message      MessagePayload   `json:"message"`
+	FinishReason string           `json:"finishReason"`
+	Logprobs     *LogprobsPayload `json:"logprobs,omitempty"`
+}
+
+type MessagePayload struct {
+	Role        string            `json:"role"`
+	Content     string            `json:"content"`
+	Refusal     *string           `json:"refusal,omitempty"`
+	Annotations []interface{}     `json:"annotations,omitempty"`
+	ToolCalls   []ToolCallPayload `json:"toolCalls,omitempty"`
+}
+
+type ToolCallPayload struct {
+	ID       string              `json:"id"`
+	Type     string              `json:"type"`
+	Function FunctionCallPayload `json:"function"`
+}
+
+type FunctionCallPayload struct {
+	Name      string `json:"name"`
+	Arguments string `json:"arguments"`
+}
+
+type LogprobsPayload struct {
+	Content []LogprobContentPayload `json:"content,omitempty"`
+}
+
+type LogprobContentPayload struct {
+	Token       string              `json:"token"`
+	Logprob     float64             `json:"logprob"`
+	Bytes       []int               `json:"bytes,omitempty"`
+	TopLogprobs []TopLogprobPayload `json:"topLogprobs,omitempty"`
+}
+
+type TopLogprobPayload struct {
+	Token   string  `json:"token"`
+	Logprob float64 `json:"logprob"`
+	Bytes   []int   `json:"bytes,omitempty"`
+}
+
+type UsagePayload struct {
+	PromptTokens            int                   `json:"promptTokens"`
+	CompletionTokens        int                   `json:"completionTokens"`
+	TotalTokens             int                   `json:"totalTokens"`
+	PromptTokensDetails     *TokensDetailsPayload `json:"promptTokensDetails,omitempty"`
+	CompletionTokensDetails *TokensDetailsPayload `json:"completionTokensDetails,omitempty"`
+}
+
+type TokensDetailsPayload struct {
+	CachedTokens             *int `json:"cachedTokens,omitempty"`
+	AudioTokens              *int `json:"audioTokens,omitempty"`
+	ReasoningTokens          *int `json:"reasoningTokens,omitempty"`
+	AcceptedPredictionTokens *int `json:"acceptedPredictionTokens,omitempty"`
+	RejectedPredictionTokens *int `json:"rejectedPredictionTokens,omitempty"`
 }
 
 func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 	// Get logger with request ID from context
 	log := logger.FromContext(r.Context())
-	
+
 	var payload ChatRequestPayload
 
 	r.Body = http.MaxBytesReader(w, r.Body, 10*1024*1024)
@@ -84,11 +187,21 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 	// Convert options if provided
 	if payload.Options != nil {
 		req.Options = llm.ChatOptions{
-			Temperature: payload.Options.Temperature,
-			MaxTokens:   payload.Options.MaxTokens,
-			TopP:        payload.Options.TopP,
-			Stop:        payload.Options.Stop,
-			Verbosity:   payload.Options.Verbosity,
+			Temperature:       payload.Options.Temperature,
+			MaxTokens:         payload.Options.MaxTokens,
+			TopP:              payload.Options.TopP,
+			Stop:              payload.Options.Stop,
+			Verbosity:         payload.Options.Verbosity,
+			FrequencyPenalty:  payload.Options.FrequencyPenalty,
+			PresencePenalty:   payload.Options.PresencePenalty,
+			LogitBias:         payload.Options.LogitBias,
+			Logprobs:          payload.Options.Logprobs,
+			TopLogprobs:       payload.Options.TopLogprobs,
+			N:                 payload.Options.N,
+			Seed:              payload.Options.Seed,
+			User:              payload.Options.User,
+			Stream:            payload.Options.Stream,
+			ParallelToolCalls: payload.Options.ParallelToolCalls,
 		}
 
 		// Handle response format for structured output
@@ -96,6 +209,42 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 			req.Options.ResponseFormat = &llm.ResponseFormat{
 				Type:   payload.Options.ResponseFormat.Type,
 				Schema: payload.Options.ResponseFormat.Schema,
+			}
+		}
+
+		// Handle tools
+		if len(payload.Options.Tools) > 0 {
+			req.Options.Tools = make([]llm.Tool, len(payload.Options.Tools))
+			for i, tool := range payload.Options.Tools {
+				req.Options.Tools[i] = llm.Tool{
+					Type: tool.Type,
+				}
+				if tool.Function != nil {
+					req.Options.Tools[i].Function = &llm.FunctionTool{
+						Name:        tool.Function.Name,
+						Description: tool.Function.Description,
+						Parameters:  tool.Function.Parameters,
+					}
+				}
+			}
+		}
+
+		// Handle tool choice
+		if payload.Options.ToolChoice != nil {
+			req.Options.ToolChoice = payload.Options.ToolChoice
+		}
+
+		// Handle tool resolution
+		if payload.Options.ToolResolution != nil {
+			req.Options.ToolResolution = &llm.ToolResolution{
+				Type: payload.Options.ToolResolution.Type,
+			}
+		}
+
+		// Handle stream options
+		if payload.Options.StreamOptions != nil {
+			req.Options.StreamOptions = &llm.StreamOptions{
+				IncludeUsage: payload.Options.StreamOptions.IncludeUsage,
 			}
 		}
 	}
@@ -113,18 +262,213 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 	resp, err := provider.Chat(ctx, req)
 	if err != nil {
 		log.Error().Err(err).Msg("Chat request failed")
+		
+		// Check if it's a ProviderError and return it to the user
+		if providerErr, ok := err.(*llm.ProviderError); ok {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(providerErr.StatusCode)
+			
+			errorResponse := map[string]interface{}{
+				"error": map[string]interface{}{
+					"message":    providerErr.Message,
+					"type":       providerErr.Type,
+					"code":       providerErr.Code,
+					"param":      providerErr.Param,
+					"statusCode":  providerErr.StatusCode,
+				},
+			}
+			
+			// Include raw error if available
+			if len(providerErr.Raw) > 0 {
+				errorResponse["raw"] = json.RawMessage(providerErr.Raw)
+			}
+			
+			if err := json.NewEncoder(w).Encode(errorResponse); err != nil {
+				log.Error().Err(err).Msg("Failed to encode error response")
+			}
+			return
+		}
+		
+		// For other errors, return generic internal server error
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	// Build response
-	response := ChatResponsePayload{
-		ID:      resp.ID,
-		Model:   resp.Model,
-		Content: resp.Content,
+	// Parse raw response to extract all fields
+	var rawResponse struct {
+		ID                string  `json:"id"`
+		Object            string  `json:"object"`
+		Created           int64   `json:"created"`
+		Model             string  `json:"model"`
+		SystemFingerprint *string `json:"system_fingerprint,omitempty"`
+		Choices           []struct {
+			Index   int `json:"index"`
+			Message struct {
+				Role        string        `json:"role"`
+				Content     string        `json:"content"`
+				Refusal     *string       `json:"refusal,omitempty"`
+				Annotations []interface{} `json:"annotations,omitempty"`
+				ToolCalls   []struct {
+					ID       string `json:"id"`
+					Type     string `json:"type"`
+					Function struct {
+						Name      string `json:"name"`
+						Arguments string `json:"arguments"`
+					} `json:"function"`
+				} `json:"tool_calls,omitempty"`
+			} `json:"message"`
+			FinishReason string `json:"finish_reason"`
+			Logprobs     *struct {
+				Content []struct {
+					Token       string  `json:"token"`
+					Logprob     float64 `json:"logprob"`
+					Bytes       []int   `json:"bytes,omitempty"`
+					TopLogprobs []struct {
+						Token   string  `json:"token"`
+						Logprob float64 `json:"logprob"`
+						Bytes   []int   `json:"bytes,omitempty"`
+					} `json:"top_logprobs,omitempty"`
+				} `json:"content,omitempty"`
+			} `json:"logprobs,omitempty"`
+		} `json:"choices"`
+		Usage *struct {
+			PromptTokens        int `json:"prompt_tokens"`
+			CompletionTokens    int `json:"completion_tokens"`
+			TotalTokens         int `json:"total_tokens"`
+			PromptTokensDetails *struct {
+				CachedTokens             *int `json:"cached_tokens,omitempty"`
+				AudioTokens              *int `json:"audio_tokens,omitempty"`
+				ReasoningTokens          *int `json:"reasoning_tokens,omitempty"`
+				AcceptedPredictionTokens *int `json:"accepted_prediction_tokens,omitempty"`
+				RejectedPredictionTokens *int `json:"rejected_prediction_tokens,omitempty"`
+			} `json:"prompt_tokens_details,omitempty"`
+			CompletionTokensDetails *struct {
+				CachedTokens             *int `json:"cached_tokens,omitempty"`
+				AudioTokens              *int `json:"audio_tokens,omitempty"`
+				ReasoningTokens          *int `json:"reasoning_tokens,omitempty"`
+				AcceptedPredictionTokens *int `json:"accepted_prediction_tokens,omitempty"`
+				RejectedPredictionTokens *int `json:"rejected_prediction_tokens,omitempty"`
+			} `json:"completion_tokens_details,omitempty"`
+		} `json:"usage,omitempty"`
+		ServiceTier *string `json:"service_tier,omitempty"`
 	}
 
-	// If structured response was requested, parse the JSON content
+	// Try to parse the raw response
+	if len(resp.Raw) > 0 {
+		if err := json.Unmarshal(resp.Raw, &rawResponse); err != nil {
+			log.Warn().Err(err).Msg("Failed to parse raw response, using basic fields")
+			// Fallback to basic response
+			rawResponse.ID = resp.ID
+			rawResponse.Model = resp.Model
+			rawResponse.Object = "chat.completion"
+		}
+	} else {
+		// Fallback if raw is empty
+		rawResponse.ID = resp.ID
+		rawResponse.Model = resp.Model
+		rawResponse.Object = "chat.completion"
+	}
+
+	// Convert choices from raw response format to payload format
+	choices := make([]ChoicePayload, len(rawResponse.Choices))
+	for i, choice := range rawResponse.Choices {
+		toolCalls := make([]ToolCallPayload, len(choice.Message.ToolCalls))
+		for j, tc := range choice.Message.ToolCalls {
+			toolCalls[j] = ToolCallPayload{
+				ID:   tc.ID,
+				Type: tc.Type,
+				Function: FunctionCallPayload{
+					Name:      tc.Function.Name,
+					Arguments: tc.Function.Arguments,
+				},
+			}
+		}
+
+		var logprobs *LogprobsPayload
+		if choice.Logprobs != nil {
+			logprobContent := make([]LogprobContentPayload, len(choice.Logprobs.Content))
+			for j, lp := range choice.Logprobs.Content {
+				topLogprobs := make([]TopLogprobPayload, len(lp.TopLogprobs))
+				for k, tlp := range lp.TopLogprobs {
+					topLogprobs[k] = TopLogprobPayload{
+						Token:   tlp.Token,
+						Logprob: tlp.Logprob,
+						Bytes:   tlp.Bytes,
+					}
+				}
+				logprobContent[j] = LogprobContentPayload{
+					Token:       lp.Token,
+					Logprob:     lp.Logprob,
+					Bytes:       lp.Bytes,
+					TopLogprobs: topLogprobs,
+				}
+			}
+			logprobs = &LogprobsPayload{
+				Content: logprobContent,
+			}
+		}
+
+		choices[i] = ChoicePayload{
+			Index:        choice.Index,
+			FinishReason: choice.FinishReason,
+			Logprobs:     logprobs,
+			Message: MessagePayload{
+				Role:        choice.Message.Role,
+				Content:     choice.Message.Content,
+				Refusal:     choice.Message.Refusal,
+				Annotations: choice.Message.Annotations,
+				ToolCalls:   toolCalls,
+			},
+		}
+	}
+
+	// Convert usage
+	var usage *UsagePayload
+	if rawResponse.Usage != nil {
+		var promptDetails *TokensDetailsPayload
+		if rawResponse.Usage.PromptTokensDetails != nil {
+			promptDetails = &TokensDetailsPayload{
+				CachedTokens:             rawResponse.Usage.PromptTokensDetails.CachedTokens,
+				AudioTokens:              rawResponse.Usage.PromptTokensDetails.AudioTokens,
+				ReasoningTokens:          rawResponse.Usage.PromptTokensDetails.ReasoningTokens,
+				AcceptedPredictionTokens: rawResponse.Usage.PromptTokensDetails.AcceptedPredictionTokens,
+				RejectedPredictionTokens: rawResponse.Usage.PromptTokensDetails.RejectedPredictionTokens,
+			}
+		}
+		var completionDetails *TokensDetailsPayload
+		if rawResponse.Usage.CompletionTokensDetails != nil {
+			completionDetails = &TokensDetailsPayload{
+				CachedTokens:             rawResponse.Usage.CompletionTokensDetails.CachedTokens,
+				AudioTokens:              rawResponse.Usage.CompletionTokensDetails.AudioTokens,
+				ReasoningTokens:          rawResponse.Usage.CompletionTokensDetails.ReasoningTokens,
+				AcceptedPredictionTokens: rawResponse.Usage.CompletionTokensDetails.AcceptedPredictionTokens,
+				RejectedPredictionTokens: rawResponse.Usage.CompletionTokensDetails.RejectedPredictionTokens,
+			}
+		}
+		usage = &UsagePayload{
+			PromptTokens:            rawResponse.Usage.PromptTokens,
+			CompletionTokens:        rawResponse.Usage.CompletionTokens,
+			TotalTokens:             rawResponse.Usage.TotalTokens,
+			PromptTokensDetails:     promptDetails,
+			CompletionTokensDetails: completionDetails,
+		}
+	}
+
+	// Build response
+	response := ChatResponsePayload{
+		ID:                rawResponse.ID,
+		Object:            rawResponse.Object,
+		Created:           rawResponse.Created,
+		Model:             rawResponse.Model,
+		SystemFingerprint: rawResponse.SystemFingerprint,
+		Choices:           choices,
+		Usage:             usage,
+		ServiceTier:       rawResponse.ServiceTier,
+		Content:           resp.Content, // Convenience field
+		Raw:               resp.Raw,     // Include raw response
+	}
+
+	// If structured response was requested, parse the content as JSON
 	if req.Options.ResponseFormat != nil && resp.Content != "" {
 		// Try to parse the content as JSON
 		var parsed json.RawMessage
