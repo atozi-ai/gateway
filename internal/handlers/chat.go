@@ -51,6 +51,8 @@ type ChatOptionsPayload struct {
 
 	Stream        *bool                 `json:"stream,omitempty"`
 	StreamOptions *StreamOptionsPayload `json:"streamOptions,omitempty"`
+	Raw                *bool `json:"raw,omitempty"`                 // Include raw provider response
+	IncludeAccumulated *bool `json:"includeAccumulated,omitempty"`   // Include top-level accumulated content field
 }
 
 type ToolPayload struct {
@@ -87,7 +89,7 @@ type ChatResponsePayload struct {
 	Choices           []ChoicePayload `json:"choices"`
 	Usage             *UsagePayload   `json:"usage,omitempty"`
 	ServiceTier       *string         `json:"serviceTier,omitempty"`
-	Content           string          `json:"content"`          // Convenience field for first choice content
+	Content           string          `json:"content,omitempty"`          // Convenience field for first choice content (accumulated)
 	Parsed            json.RawMessage `json:"parsed,omitempty"` // Parsed structured response if schema was provided
 	Raw               json.RawMessage `json:"raw,omitempty"`    // Raw response from provider
 }
@@ -200,6 +202,24 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 		payload.Options.Stream = &streamValue
 	}
 
+	// Check for raw parameter - from options first, then query string as fallback
+	includeRaw := false
+	if payload.Options != nil && payload.Options.Raw != nil {
+		includeRaw = *payload.Options.Raw
+	} else {
+		rawQueryParam := r.URL.Query().Get("raw")
+		includeRaw = rawQueryParam == "true" || rawQueryParam == "1"
+	}
+
+	// Check for includeAccumulated parameter - from options first, then query string as fallback
+	includeAccumulated := false
+	if payload.Options != nil && payload.Options.IncludeAccumulated != nil {
+		includeAccumulated = *payload.Options.IncludeAccumulated
+	} else {
+		accumulatedQueryParam := r.URL.Query().Get("includeAccumulated")
+		includeAccumulated = accumulatedQueryParam == "true" || accumulatedQueryParam == "1"
+	}
+
 	// Convert options if provided
 	if payload.Options != nil {
 		req.Options = llm.ChatOptions{
@@ -280,7 +300,7 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 
 	// Check if streaming is requested
 	if req.Options.Stream != nil && *req.Options.Stream {
-		h.handleStreamingChat(w, r, ctx, provider, req, log)
+		h.handleStreamingChat(w, r, ctx, provider, req, log, includeRaw, includeAccumulated)
 		return
 	}
 
@@ -489,8 +509,16 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 		Choices:           choices,
 		Usage:             usage,
 		ServiceTier:       rawResponse.ServiceTier,
-		Content:           resp.Content, // Convenience field
-		Raw:               resp.Raw,     // Include raw response
+	}
+	
+	// Include top-level content field (accumulated) if requested
+	if includeAccumulated {
+		response.Content = resp.Content // Convenience field
+	}
+	
+	// Include raw provider response if requested
+	if includeRaw && len(resp.Raw) > 0 {
+		response.Raw = resp.Raw
 	}
 
 	// If structured response was requested, parse the content as JSON
@@ -520,6 +548,8 @@ func (h *ChatHandler) handleStreamingChat(
 	provider llm.Provider,
 	req llm.ChatRequest,
 	log zerolog.Logger,
+	includeRaw bool,
+	includeAccumulated bool,
 ) {
 	// Set up Server-Sent Events headers
 	w.Header().Set("Content-Type", "text/event-stream")
@@ -536,7 +566,7 @@ func (h *ChatHandler) handleStreamingChat(
 	}
 
 	// Check if accumulated content is requested in message payload
-	includeAccumulated := req.Options.StreamOptions != nil && 
+	includeAccumulatedInMessage := req.Options.StreamOptions != nil && 
 		req.Options.StreamOptions.IncludeAccumulated != nil && 
 		*req.Options.StreamOptions.IncludeAccumulated
 
@@ -566,7 +596,7 @@ func (h *ChatHandler) handleStreamingChat(
 				accumulatedContent[choice.Index] += deltaContent
 				
 				// Set accumulated content in message if requested
-				if includeAccumulated {
+				if includeAccumulatedInMessage {
 					if accContent, exists := accumulatedContent[choice.Index]; exists && accContent != "" {
 						message.AccumulatedContent = &accContent
 					}
@@ -613,11 +643,15 @@ func (h *ChatHandler) handleStreamingChat(
 			Model:   chunk.Model,
 			Choices: choices,
 			Usage:   usage,
-			Content: content, // Accumulated content from all previous chunks
 		}
 		
-		// Include raw provider response if available
-		if len(chunk.Raw) > 0 {
+		// Include top-level content field (accumulated) if requested
+		if includeAccumulated {
+			streamResponse.Content = content // Accumulated content from all previous chunks
+		}
+		
+		// Include raw provider response if requested
+		if includeRaw && len(chunk.Raw) > 0 {
 			streamResponse.Raw = json.RawMessage(chunk.Raw)
 		}
 
