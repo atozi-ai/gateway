@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/platform/logger"
 	"github.com/atozi-ai/gateway/internal/providers"
 	"github.com/go-chi/chi/v5"
+	"github.com/rs/zerolog"
 )
 
 type ChatHandler struct{}
@@ -67,7 +69,8 @@ type ToolResolutionPayload struct {
 }
 
 type StreamOptionsPayload struct {
-	IncludeUsage *bool `json:"includeUsage,omitempty"`
+	IncludeUsage        *bool `json:"includeUsage,omitempty"`
+	IncludeAccumulated *bool `json:"includeAccumulated,omitempty"` // Include accumulated content in each chunk
 }
 
 type ResponseFormatPayload struct {
@@ -97,11 +100,12 @@ type ChoicePayload struct {
 }
 
 type MessagePayload struct {
-	Role        string            `json:"role"`
-	Content     string            `json:"content"`
-	Refusal     *string           `json:"refusal,omitempty"`
-	Annotations []interface{}     `json:"annotations,omitempty"`
-	ToolCalls   []ToolCallPayload `json:"toolCalls,omitempty"`
+	Role               string            `json:"role"`
+	Content            string            `json:"content"`
+	AccumulatedContent *string           `json:"accumulatedContent,omitempty"` // Full accumulated content from all chunks
+	Refusal            *string           `json:"refusal,omitempty"`
+	Annotations        []interface{}     `json:"annotations,omitempty"`
+	ToolCalls          []ToolCallPayload `json:"toolCalls,omitempty"`
 }
 
 type ToolCallPayload struct {
@@ -184,6 +188,18 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 		Messages: payload.Messages,
 	}
 
+	// Check for stream parameter in query string as fallback
+	streamQueryParam := r.URL.Query().Get("stream")
+	if streamQueryParam != "" && (payload.Options == nil || payload.Options.Stream == nil) {
+		// Initialize Options if nil
+		if payload.Options == nil {
+			payload.Options = &ChatOptionsPayload{}
+		}
+		// Parse stream query parameter
+		streamValue := streamQueryParam == "true" || streamQueryParam == "1"
+		payload.Options.Stream = &streamValue
+	}
+
 	// Convert options if provided
 	if payload.Options != nil {
 		req.Options = llm.ChatOptions{
@@ -244,7 +260,8 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 		// Handle stream options
 		if payload.Options.StreamOptions != nil {
 			req.Options.StreamOptions = &llm.StreamOptions{
-				IncludeUsage: payload.Options.StreamOptions.IncludeUsage,
+				IncludeUsage:        payload.Options.StreamOptions.IncludeUsage,
+				IncludeAccumulated:  payload.Options.StreamOptions.IncludeAccumulated,
 			}
 		}
 	}
@@ -255,10 +272,18 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 		Str("provider", provider.Name()).
 		Str("model", req.Model).
 		Bool("structured", req.Options.ResponseFormat != nil).
+		Bool("stream", req.Options.Stream != nil && *req.Options.Stream).
 		Msg("Processing chat request")
 
 	ctx, cancel := context.WithTimeout(r.Context(), 120*time.Second)
 	defer cancel()
+
+	// Check if streaming is requested
+	if req.Options.Stream != nil && *req.Options.Stream {
+		h.handleStreamingChat(w, r, ctx, provider, req, log)
+		return
+	}
+
 	resp, err := provider.Chat(ctx, req)
 	if err != nil {
 		log.Error().Err(err).Msg("Chat request failed")
@@ -486,6 +511,172 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 		// Response may have been partially written, can't use http.Error
 		return
 	}
+}
+
+func (h *ChatHandler) handleStreamingChat(
+	w http.ResponseWriter,
+	r *http.Request,
+	ctx context.Context,
+	provider llm.Provider,
+	req llm.ChatRequest,
+	log zerolog.Logger,
+) {
+	// Set up Server-Sent Events headers
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("X-Accel-Buffering", "no") // Disable buffering in nginx
+
+	// Create a flusher to enable streaming
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		log.Error().Msg("Streaming not supported by response writer")
+		http.Error(w, "Streaming not supported", http.StatusInternalServerError)
+		return
+	}
+
+	// Check if accumulated content is requested in message payload
+	includeAccumulated := req.Options.StreamOptions != nil && 
+		req.Options.StreamOptions.IncludeAccumulated != nil && 
+		*req.Options.StreamOptions.IncludeAccumulated
+
+	// Always track accumulated content for top-level content field
+	accumulatedContent := make(map[int]string)
+
+	// Stream chunks from provider
+	err := provider.ChatStream(ctx, req, func(chunk *llm.StreamChunk) error {
+		// Convert chunk to response format
+		choices := make([]ChoicePayload, len(chunk.Choices))
+		for i, choice := range chunk.Choices {
+			message := MessagePayload{
+				Role:    "assistant",
+				Content: "",
+			}
+
+			if choice.Delta.Role != nil {
+				message.Role = *choice.Delta.Role
+			}
+			
+			// Handle delta content
+			if choice.Delta.Content != nil {
+				deltaContent := *choice.Delta.Content
+				message.Content = deltaContent // Delta content for this chunk only
+				
+				// Always accumulate content for top-level field
+				accumulatedContent[choice.Index] += deltaContent
+				
+				// Set accumulated content in message if requested
+				if includeAccumulated {
+					if accContent, exists := accumulatedContent[choice.Index]; exists && accContent != "" {
+						message.AccumulatedContent = &accContent
+					}
+				}
+			}
+
+			choices[i] = ChoicePayload{
+				Index:   choice.Index,
+				Message: message,
+			}
+
+			if choice.FinishReason != nil {
+				choices[i].FinishReason = *choice.FinishReason
+			}
+		}
+
+		var usage *UsagePayload
+		if chunk.Usage != nil {
+			usage = &UsagePayload{
+				PromptTokens:     chunk.Usage.PromptTokens,
+				CompletionTokens: chunk.Usage.CompletionTokens,
+				TotalTokens:       chunk.Usage.TotalTokens,
+			}
+		}
+
+		// Get accumulated content for top-level content field
+		// Use first choice index if available, otherwise use index 0 (most common case)
+		var content string
+		if len(choices) > 0 {
+			if accContent, exists := accumulatedContent[choices[0].Index]; exists {
+				content = accContent
+			}
+		} else {
+			// If no choices in this chunk (e.g., final usage chunk), use accumulated content from index 0
+			if accContent, exists := accumulatedContent[0]; exists {
+				content = accContent
+			}
+		}
+
+		streamResponse := ChatResponsePayload{
+			ID:      chunk.ID,
+			Object:  chunk.Object,
+			Created: chunk.Created,
+			Model:   chunk.Model,
+			Choices: choices,
+			Usage:   usage,
+			Content: content, // Accumulated content from all previous chunks
+		}
+		
+		// Include raw provider response if available
+		if len(chunk.Raw) > 0 {
+			streamResponse.Raw = json.RawMessage(chunk.Raw)
+		}
+
+		// Marshal to JSON
+		jsonData, err := json.Marshal(streamResponse)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to marshal stream chunk")
+			return err
+		}
+
+		// Write SSE format: "data: {json}\n\n"
+		_, err = fmt.Fprintf(w, "data: %s\n\n", jsonData)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to write stream chunk")
+			return err
+		}
+
+		// Flush to send data immediately
+		flusher.Flush()
+		return nil
+	})
+
+	if err != nil {
+		log.Error().Err(err).Msg("Streaming chat request failed")
+
+		// Check if it's a ProviderError
+		if providerErr, ok := err.(*llm.ProviderError); ok {
+			errorResponse := map[string]interface{}{
+				"error": map[string]interface{}{
+					"message":    providerErr.Message,
+					"type":       providerErr.Type,
+					"code":       providerErr.Code,
+					"param":      providerErr.Param,
+					"statusCode":  providerErr.StatusCode,
+				},
+			}
+
+			jsonData, _ := json.Marshal(errorResponse)
+			fmt.Fprintf(w, "data: %s\n\n", jsonData)
+			flusher.Flush()
+			return
+		}
+
+		// For other errors, send error in SSE format
+		errorResponse := map[string]interface{}{
+			"error": map[string]interface{}{
+				"message": "Internal server error",
+				"type":    "internal_error",
+			},
+		}
+		jsonData, _ := json.Marshal(errorResponse)
+		fmt.Fprintf(w, "data: %s\n\n", jsonData)
+		flusher.Flush()
+		return
+	}
+
+	// Send [DONE] marker to indicate stream completion
+	fmt.Fprintf(w, "data: [DONE]\n\n")
+	flusher.Flush()
 }
 
 func (h *ChatHandler) RegisterRoutes(r chi.Router) {
