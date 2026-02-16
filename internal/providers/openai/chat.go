@@ -73,18 +73,23 @@ func (o *OpenAI) Chat(
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		var apiError struct {
-			Error struct {
-				Message string `json:"message"`
-				Type    string `json:"type"`
-				Code    string `json:"code"`
-			} `json:"error"`
-		}
+		var apiError openAIErrorResponse
 		if err := json.Unmarshal(bodyBytes, &apiError); err == nil && apiError.Error.Message != "" {
-			return nil, fmt.Errorf("OpenAI API error: %s (type: %s, code: %s)",
-				apiError.Error.Message, apiError.Error.Type, apiError.Error.Code)
+			return nil, &llm.ProviderError{
+				StatusCode: resp.StatusCode,
+				Message:    apiError.Error.Message,
+				Type:       apiError.Error.Type,
+				Code:       apiError.Error.Code,
+				Param:      apiError.Error.Param,
+				Raw:        bodyBytes,
+			}
 		}
-		return nil, fmt.Errorf("OpenAI API returned status %d: %s", resp.StatusCode, string(bodyBytes))
+		// If we can't parse the error, still return a ProviderError with raw response
+		return nil, &llm.ProviderError{
+			StatusCode: resp.StatusCode,
+			Message:    fmt.Sprintf("OpenAI API returned status %d", resp.StatusCode),
+			Raw:        bodyBytes,
+		}
 	}
 
 	var raw openAIChatResponse
@@ -101,5 +106,6 @@ func (o *OpenAI) Chat(
 		ID:      raw.ID,
 		Model:   raw.Model,
 		Content: content,
+		Raw:     bodyBytes, // Include raw response
 	}, nil
 }
