@@ -134,3 +134,31 @@ type openAIErrorResponse struct {
 		Param   string `json:"param,omitempty"`
 	} `json:"error"`
 }
+
+type openAIStreamChunk struct {
+	ID      string                `json:"id"`
+	Object  string                `json:"object"`
+	Created int64                 `json:"created"`
+	Model   string                `json:"model"`
+	Choices []openAIStreamChoice  `json:"choices"`
+	Usage   *openAIStreamUsage    `json:"usage,omitempty"`
+}
+
+type openAIStreamChoice struct {
+	Index        int                    `json:"index"`
+	Delta        openAIStreamDelta      `json:"delta"`
+	FinishReason *string                `json:"finish_reason,omitempty"`
+	Logprobs     interface{}           `json:"logprobs,omitempty"`
+}
+
+type openAIStreamDelta struct {
+	Role      *string        `json:"role,omitempty"`
+	Content   *string        `json:"content,omitempty"`
+	ToolCalls []interface{} `json:"tool_calls,omitempty"`
+}
+
+type openAIStreamUsage struct {
+	PromptTokens     int `json:"prompt_tokens"`
+	CompletionTokens int `json:"completion_tokens"`
+	TotalTokens      int `json:"total_tokens"`
+}

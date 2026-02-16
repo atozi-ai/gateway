@@ -95,7 +95,8 @@ type ToolResolution struct {
 }
 
 type StreamOptions struct {
-	IncludeUsage *bool `json:"include_usage,omitempty"`
+	IncludeUsage        *bool `json:"include_usage,omitempty"`
+	IncludeAccumulated *bool `json:"include_accumulated,omitempty"` // Include accumulated content in each chunk
 }
 
 // ProviderError represents an error from a provider with details
