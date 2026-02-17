@@ -23,6 +23,7 @@ func NewChatHandler() *ChatHandler {
 
 type ChatRequestPayload struct {
 	Model    string              `json:"model"`
+	Endpoint string              `json:"endpoint,omitempty"`
 	Messages []llm.Message       `json:"messages"`
 	Options  *ChatOptionsPayload `json:"options,omitempty"`
 }
@@ -321,7 +322,7 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get provider and call chat
-	provider, model, err := providers.Get(req.Model, apiKey)
+	provider, model, err := providers.Get(req.Model, apiKey, payload.Endpoint)
 	if err != nil {
 		log.Error().Err(err).Str("model", req.Model).Msg("Invalid provider/model")
 		writeError(w, err)
