@@ -112,6 +112,9 @@ func (c *Client) ChatStream(
 
 // endpoint returns the full chat completions URL.
 func (c *Client) endpoint() string {
+	if strings.Contains(c.cfg.BaseURL, "openai.azure.com"){
+		return strings.TrimRight(c.cfg.BaseURL, "/")
+	}
 	return strings.TrimRight(c.cfg.BaseURL, "/") + "/chat/completions"
 }
 
