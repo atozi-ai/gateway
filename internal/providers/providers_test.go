@@ -9,7 +9,7 @@ import (
 
 func TestOpenAIChat(t *testing.T) {
 	req := llm.ChatRequest{
-		Model: "gpt-4.1-mini",
+		Model: "openai/gpt-4.1-mini",
 		Messages: []llm.Message{
 			{
 				Role:    llm.RoleUser,
@@ -18,7 +18,11 @@ func TestOpenAIChat(t *testing.T) {
 		},
 	}
 
-	p := Get(req.Model)
+	p, model, err := Get(req.Model, "test-api-key")
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Model = model
 
 	resp, err := p.Chat(context.Background(), req)
 	if err != nil {

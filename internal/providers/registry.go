@@ -1,59 +1,38 @@
 package providers
 
 import (
+	"fmt"
 	"strings"
-	"sync"
 
 	"github.com/atozi-ai/gateway/internal/domain/llm"
 	"github.com/atozi-ai/gateway/internal/providers/openai"
+	"github.com/atozi-ai/gateway/internal/providers/xai"
 )
 
-var (
-	// Cache for provider instances (singleton pattern)
-	providerCache = make(map[string]llm.Provider)
-	cacheMu       sync.RWMutex
-)
-
-// Get returns a cached provider instance for the given model.
-// Provider instances are created once and reused for all requests.
-func Get(model string) llm.Provider {
-	m := strings.ToLower(model)
-
-	// Determine provider type based on model name
-	var providerType string
-	switch {
-	case strings.Contains(m, "openai"):
-		providerType = "openai"
-	default:
-		providerType = "openai"
+// Get parses a qualified model name ("provider/model") and returns the
+// matching provider plus the bare model name to send upstream.
+func Get(qualifiedModel string, apiKey string) (llm.Provider, string, error) {
+	providerName, model, ok := strings.Cut(qualifiedModel, "/")
+	if !ok {
+		return nil, "", &llm.ProviderError{
+			StatusCode: 400,
+			Message:    fmt.Sprintf("model must be in provider/model format, got %q", qualifiedModel),
+			Type:       "invalid_request_error",
+			Code:       "invalid_model_format",
+		}
 	}
 
-	// Check cache first (read lock)
-	cacheMu.RLock()
-	if provider, exists := providerCache[providerType]; exists {
-		cacheMu.RUnlock()
-		return provider
-	}
-	cacheMu.RUnlock()
-
-	// Create new provider instance (write lock)
-	cacheMu.Lock()
-	defer cacheMu.Unlock()
-
-	// Double-check pattern: another goroutine might have created it
-	if provider, exists := providerCache[providerType]; exists {
-		return provider
-	}
-
-	// Create and cache the provider
-	var provider llm.Provider
-	switch providerType {
+	switch providerName {
 	case "openai":
-		provider = openai.New()
+		return openai.New(apiKey), model, nil
+	case "xai":
+		return xai.New(apiKey), model, nil
 	default:
-		provider = openai.New()
+		return nil, "", &llm.ProviderError{
+			StatusCode: 400,
+			Message:    fmt.Sprintf("unknown provider: %q", providerName),
+			Type:       "invalid_request_error",
+			Code:       "unknown_provider",
+		}
 	}
-
-	providerCache[providerType] = provider
-	return provider
 }
