@@ -40,7 +40,10 @@ func newHTTPClient() *http.Client {
 
 // setHeaders applies standard and custom headers to the request.
 func (c *Client) setHeaders(req *http.Request) {
-	req.Header.Set("Authorization", "Bearer "+c.cfg.APIKey)
+	// Skip Authorization header if api-key header is provided (e.g., Azure)
+	if _, hasAPIKey := c.cfg.Headers["api-key"]; !hasAPIKey {
+		req.Header.Set("Authorization", "Bearer "+c.cfg.APIKey)
+	}
 	req.Header.Set("Content-Type", "application/json")
 	for k, v := range c.cfg.Headers {
 		req.Header.Set(k, v)
