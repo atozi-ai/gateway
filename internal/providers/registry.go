@@ -7,6 +7,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/domain/llm"
 	"github.com/atozi-ai/gateway/internal/providers/openai"
 	"github.com/atozi-ai/gateway/internal/providers/xai"
+	"github.com/atozi-ai/gateway/internal/providers/zai"
 )
 
 // Get parses a qualified model name ("provider/model") and returns the
@@ -27,6 +28,8 @@ func Get(qualifiedModel string, apiKey string) (llm.Provider, string, error) {
 		return openai.New(apiKey), model, nil
 	case "xai":
 		return xai.New(apiKey), model, nil
+	case "zai":
+		return zai.New(apiKey), model, nil
 	default:
 		return nil, "", &llm.ProviderError{
 			StatusCode: 400,
