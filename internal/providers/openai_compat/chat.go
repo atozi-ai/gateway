@@ -22,7 +22,7 @@ func (c *Client) Chat(ctx context.Context, req llm.ChatRequest) (*llm.ChatRespon
 
 	jsonBody, err := json.Marshal(body)
 	if err != nil {
-		return nil, fmt.Errorf("marshal request: %w", err)
+		return nil, llm.NewInternalError(fmt.Sprintf("failed to marshal request: %v", err))
 	}
 
 	log := logger.FromContext(ctx)
@@ -30,19 +30,19 @@ func (c *Client) Chat(ctx context.Context, req llm.ChatRequest) (*llm.ChatRespon
 
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.endpoint(), bytes.NewReader(jsonBody))
 	if err != nil {
-		return nil, fmt.Errorf("create request: %w", err)
+		return nil, llm.NewInternalError(fmt.Sprintf("failed to create request: %v", err))
 	}
 	c.setHeaders(httpReq)
 
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {
-		return nil, fmt.Errorf("execute request: %w", err)
+		return nil, llm.NewProviderError(503, fmt.Sprintf("failed to execute request: %v", err), "service_unavailable", "request_failed")
 	}
 	defer resp.Body.Close()
 
 	respBody, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseBytes))
 	if err != nil {
-		return nil, fmt.Errorf("read response: %w", err)
+		return nil, llm.NewInternalError(fmt.Sprintf("failed to read response: %v", err))
 	}
 
 	if err := checkError(resp.StatusCode, respBody); err != nil {
@@ -51,7 +51,7 @@ func (c *Client) Chat(ctx context.Context, req llm.ChatRequest) (*llm.ChatRespon
 
 	var raw chatResponse
 	if err := json.Unmarshal(respBody, &raw); err != nil {
-		return nil, fmt.Errorf("unmarshal response: %w", err)
+		return nil, llm.NewInternalError(fmt.Sprintf("failed to unmarshal response: %v", err))
 	}
 
 	content := ""
@@ -82,7 +82,7 @@ func (c *Client) ChatStream(
 
 	jsonBody, err := json.Marshal(body)
 	if err != nil {
-		return fmt.Errorf("marshal request: %w", err)
+		return llm.NewInternalError(fmt.Sprintf("failed to marshal request: %v", err))
 	}
 
 	log := logger.FromContext(ctx)
@@ -90,20 +90,20 @@ func (c *Client) ChatStream(
 
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.endpoint(), bytes.NewReader(jsonBody))
 	if err != nil {
-		return fmt.Errorf("create request: %w", err)
+		return llm.NewInternalError(fmt.Sprintf("failed to create request: %v", err))
 	}
 	c.setHeaders(httpReq)
 
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {
-		return fmt.Errorf("execute request: %w", err)
+		return llm.NewProviderError(503, fmt.Sprintf("failed to execute request: %v", err), "service_unavailable", "request_failed")
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		respBody, readErr := io.ReadAll(io.LimitReader(resp.Body, maxResponseBytes))
 		if readErr != nil {
-			return fmt.Errorf("read error response: %w", readErr)
+			return llm.NewInternalError(fmt.Sprintf("failed to read error response: %v", readErr))
 		}
 		if err := checkError(resp.StatusCode, respBody); err != nil {
 			return err
@@ -198,7 +198,7 @@ func readSSEStream(
 	}
 
 	if err := scanner.Err(); err != nil {
-		return fmt.Errorf("read stream: %w", err)
+		return llm.NewInternalError(fmt.Sprintf("failed to read stream: %v", err))
 	}
 
 	return nil
@@ -233,9 +233,7 @@ func parseStreamChunk(data []byte) (*llm.StreamChunk, error) {
 		}
 		if len(c.Delta.ToolCalls) > 0 {
 			sc.Delta.ToolCalls = make([]interface{}, len(c.Delta.ToolCalls))
-			for i, tc := range c.Delta.ToolCalls {
-				sc.Delta.ToolCalls[i] = tc
-			}
+			copy(sc.Delta.ToolCalls, c.Delta.ToolCalls)
 		}
 		if c.FinishReason != nil {
 			sc.FinishReason = c.FinishReason

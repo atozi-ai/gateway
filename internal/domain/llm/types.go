@@ -115,3 +115,28 @@ func (e *ProviderError) Error() string {
 	}
 	return fmt.Sprintf("provider error [%d]: %s", e.StatusCode, e.Message)
 }
+
+// NewProviderError creates a new ProviderError with the given parameters
+func NewProviderError(statusCode int, message, errorType, code string) *ProviderError {
+	return &ProviderError{
+		StatusCode: statusCode,
+		Message:    message,
+		Type:       errorType,
+		Code:       code,
+	}
+}
+
+// NewValidationError creates a ProviderError for validation failures
+func NewValidationError(message, code string) *ProviderError {
+	return NewProviderError(400, message, "invalid_request_error", code)
+}
+
+// NewUnauthorizedError creates a ProviderError for authentication failures
+func NewUnauthorizedError(message string) *ProviderError {
+	return NewProviderError(401, message, "authentication_error", "unauthorized")
+}
+
+// NewInternalError creates a ProviderError for internal server errors
+func NewInternalError(message string) *ProviderError {
+	return NewProviderError(500, message, "internal_error", "internal_server_error")
+}
