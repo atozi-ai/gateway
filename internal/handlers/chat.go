@@ -187,9 +187,20 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 	log := logger.FromContext(r.Context())
 
 	// Extract API key from Authorization header (Bearer <key>).
-	apiKey := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-	if apiKey == "" {
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
 		http.Error(w, "missing Authorization header", http.StatusUnauthorized)
+		return
+	}
+	
+	const bearerPrefix = "Bearer "
+	if !strings.HasPrefix(authHeader, bearerPrefix) {
+		http.Error(w, "invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	apiKey := strings.TrimPrefix(authHeader, bearerPrefix)
+	if apiKey == "" {
+		http.Error(w, "missing API key in Authorization header", http.StatusUnauthorized)
 		return
 	}
 
@@ -354,7 +365,7 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Parse raw response to extract all fields
-	var rawResponse struct {
+	type rawResponse struct {
 		ID                string  `json:"id"`
 		Object            string  `json:"object"`
 		Created           int64   `json:"created"`
@@ -412,25 +423,26 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 		ServiceTier *string `json:"service_tier,omitempty"`
 	}
 
+	var parsedResponse rawResponse
 	// Try to parse the raw response
 	if len(resp.Raw) > 0 {
-		if err := json.Unmarshal(resp.Raw, &rawResponse); err != nil {
+		if err := json.Unmarshal(resp.Raw, &parsedResponse); err != nil {
 			log.Warn().Err(err).Msg("Failed to parse raw response, using basic fields")
 			// Fallback to basic response
-			rawResponse.ID = resp.ID
-			rawResponse.Model = resp.Model
-			rawResponse.Object = "chat.completion"
+			parsedResponse.ID = resp.ID
+			parsedResponse.Model = resp.Model
+			parsedResponse.Object = "chat.completion"
 		}
 	} else {
 		// Fallback if raw is empty
-		rawResponse.ID = resp.ID
-		rawResponse.Model = resp.Model
-		rawResponse.Object = "chat.completion"
+		parsedResponse.ID = resp.ID
+		parsedResponse.Model = resp.Model
+		parsedResponse.Object = "chat.completion"
 	}
 
 	// Convert choices from raw response format to payload format
-	choices := make([]ChoicePayload, len(rawResponse.Choices))
-	for i, choice := range rawResponse.Choices {
+	choices := make([]ChoicePayload, len(parsedResponse.Choices))
+	for i, choice := range parsedResponse.Choices {
 		toolCalls := make([]ToolCallPayload, len(choice.Message.ToolCalls))
 		for j, tc := range choice.Message.ToolCalls {
 			toolCalls[j] = ToolCallPayload{
@@ -483,31 +495,31 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 
 	// Convert usage
 	var usage *UsagePayload
-	if rawResponse.Usage != nil {
+	if parsedResponse.Usage != nil {
 		var promptDetails *TokensDetailsPayload
-		if rawResponse.Usage.PromptTokensDetails != nil {
+		if parsedResponse.Usage.PromptTokensDetails != nil {
 			promptDetails = &TokensDetailsPayload{
-				CachedTokens:             rawResponse.Usage.PromptTokensDetails.CachedTokens,
-				AudioTokens:              rawResponse.Usage.PromptTokensDetails.AudioTokens,
-				ReasoningTokens:          rawResponse.Usage.PromptTokensDetails.ReasoningTokens,
-				AcceptedPredictionTokens: rawResponse.Usage.PromptTokensDetails.AcceptedPredictionTokens,
-				RejectedPredictionTokens: rawResponse.Usage.PromptTokensDetails.RejectedPredictionTokens,
+				CachedTokens:             parsedResponse.Usage.PromptTokensDetails.CachedTokens,
+				AudioTokens:              parsedResponse.Usage.PromptTokensDetails.AudioTokens,
+				ReasoningTokens:          parsedResponse.Usage.PromptTokensDetails.ReasoningTokens,
+				AcceptedPredictionTokens: parsedResponse.Usage.PromptTokensDetails.AcceptedPredictionTokens,
+				RejectedPredictionTokens: parsedResponse.Usage.PromptTokensDetails.RejectedPredictionTokens,
 			}
 		}
 		var completionDetails *TokensDetailsPayload
-		if rawResponse.Usage.CompletionTokensDetails != nil {
+		if parsedResponse.Usage.CompletionTokensDetails != nil {
 			completionDetails = &TokensDetailsPayload{
-				CachedTokens:             rawResponse.Usage.CompletionTokensDetails.CachedTokens,
-				AudioTokens:              rawResponse.Usage.CompletionTokensDetails.AudioTokens,
-				ReasoningTokens:          rawResponse.Usage.CompletionTokensDetails.ReasoningTokens,
-				AcceptedPredictionTokens: rawResponse.Usage.CompletionTokensDetails.AcceptedPredictionTokens,
-				RejectedPredictionTokens: rawResponse.Usage.CompletionTokensDetails.RejectedPredictionTokens,
+				CachedTokens:             parsedResponse.Usage.CompletionTokensDetails.CachedTokens,
+				AudioTokens:              parsedResponse.Usage.CompletionTokensDetails.AudioTokens,
+				ReasoningTokens:          parsedResponse.Usage.CompletionTokensDetails.ReasoningTokens,
+				AcceptedPredictionTokens: parsedResponse.Usage.CompletionTokensDetails.AcceptedPredictionTokens,
+				RejectedPredictionTokens: parsedResponse.Usage.CompletionTokensDetails.RejectedPredictionTokens,
 			}
 		}
 		usage = &UsagePayload{
-			PromptTokens:            rawResponse.Usage.PromptTokens,
-			CompletionTokens:        rawResponse.Usage.CompletionTokens,
-			TotalTokens:             rawResponse.Usage.TotalTokens,
+			PromptTokens:            parsedResponse.Usage.PromptTokens,
+			CompletionTokens:        parsedResponse.Usage.CompletionTokens,
+			TotalTokens:             parsedResponse.Usage.TotalTokens,
 			PromptTokensDetails:     promptDetails,
 			CompletionTokensDetails: completionDetails,
 		}
@@ -515,14 +527,14 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 
 	// Build response
 	response := ChatResponsePayload{
-		ID:                rawResponse.ID,
-		Object:            rawResponse.Object,
-		Created:           rawResponse.Created,
-		Model:             rawResponse.Model,
-		SystemFingerprint: rawResponse.SystemFingerprint,
+		ID:                parsedResponse.ID,
+		Object:            parsedResponse.Object,
+		Created:           parsedResponse.Created,
+		Model:             parsedResponse.Model,
+		SystemFingerprint: parsedResponse.SystemFingerprint,
 		Choices:           choices,
 		Usage:             usage,
-		ServiceTier:       rawResponse.ServiceTier,
+		ServiceTier:       parsedResponse.ServiceTier,
 	}
 
 	// Include top-level content field (accumulated) if requested
@@ -610,7 +622,7 @@ func (h *ChatHandler) handleStreamingChat(
 
 				// Set accumulated content in message if requested
 				if includeAccumulatedInMessage {
-					if accContent, exists := accumulatedContent[choice.Index]; exists && accContent != "" {
+					if accContent := accumulatedContent[choice.Index]; accContent != "" {
 						message.AccumulatedContent = &accContent
 					}
 				}
@@ -639,14 +651,10 @@ func (h *ChatHandler) handleStreamingChat(
 		// Use first choice index if available, otherwise use index 0 (most common case)
 		var content string
 		if len(choices) > 0 {
-			if accContent, exists := accumulatedContent[choices[0].Index]; exists {
-				content = accContent
-			}
+			content = accumulatedContent[choices[0].Index]
 		} else {
 			// If no choices in this chunk (e.g., final usage chunk), use accumulated content from index 0
-			if accContent, exists := accumulatedContent[0]; exists {
-				content = accContent
-			}
+			content = accumulatedContent[0]
 		}
 
 		streamResponse := ChatResponsePayload{
