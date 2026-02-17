@@ -156,30 +156,33 @@ type TokensDetailsPayload struct {
 	RejectedPredictionTokens *int `json:"rejectedPredictionTokens,omitempty"`
 }
 
-// writeError writes a ProviderError as JSON, or falls back to a plain 500.
+// writeError writes a ProviderError as JSON, or falls back to a standardized internal error.
 func writeError(w http.ResponseWriter, err error) {
-	if pe, ok := err.(*llm.ProviderError); ok {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(pe.StatusCode)
-
-		resp := map[string]interface{}{
-			"error": map[string]interface{}{
-				"message":    pe.Message,
-				"type":       pe.Type,
-				"code":       pe.Code,
-				"param":      pe.Param,
-				"statusCode": pe.StatusCode,
-			},
-		}
-		if len(pe.Raw) > 0 {
-			resp["raw"] = json.RawMessage(pe.Raw)
-		}
-
-		json.NewEncoder(w).Encode(resp)
-		return
+	var pe *llm.ProviderError
+	if providerErr, ok := err.(*llm.ProviderError); ok {
+		pe = providerErr
+	} else {
+		// Wrap non-ProviderError errors as internal errors
+		pe = llm.NewInternalError("Internal server error")
 	}
 
-	http.Error(w, "Internal server error", http.StatusInternalServerError)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(pe.StatusCode)
+
+	resp := map[string]interface{}{
+		"error": map[string]interface{}{
+			"message":    pe.Message,
+			"type":       pe.Type,
+			"code":       pe.Code,
+			"param":      pe.Param,
+			"statusCode": pe.StatusCode,
+		},
+	}
+	if len(pe.Raw) > 0 {
+		resp["raw"] = json.RawMessage(pe.Raw)
+	}
+
+	json.NewEncoder(w).Encode(resp)
 }
 
 func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
@@ -189,18 +192,18 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 	// Extract API key from Authorization header (Bearer <key>).
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
-		http.Error(w, "missing Authorization header", http.StatusUnauthorized)
+		writeError(w, llm.NewUnauthorizedError("missing Authorization header"))
 		return
 	}
 	
 	const bearerPrefix = "Bearer "
 	if !strings.HasPrefix(authHeader, bearerPrefix) {
-		http.Error(w, "invalid Authorization header format", http.StatusUnauthorized)
+		writeError(w, llm.NewValidationError("invalid Authorization header format", "invalid_auth_format"))
 		return
 	}
 	apiKey := strings.TrimPrefix(authHeader, bearerPrefix)
 	if apiKey == "" {
-		http.Error(w, "missing API key in Authorization header", http.StatusUnauthorized)
+		writeError(w, llm.NewUnauthorizedError("missing API key in Authorization header"))
 		return
 	}
 
@@ -210,23 +213,23 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		log.Error().Err(err).Msg("Failed to decode request")
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		writeError(w, llm.NewValidationError("Invalid request body", "invalid_json"))
 		return
 	}
 
 	// Validate required fields
 	if payload.Model == "" {
-		http.Error(w, "model is required", http.StatusBadRequest)
+		writeError(w, llm.NewValidationError("model is required", "missing_model"))
 		return
 	}
 
 	if len(payload.Messages) == 0 {
-		http.Error(w, "messages are required", http.StatusBadRequest)
+		writeError(w, llm.NewValidationError("messages are required", "missing_messages"))
 		return
 	}
 
 	if len(payload.Messages) > 1000 {
-		http.Error(w, "too many messages (max 1000)", http.StatusBadRequest)
+		writeError(w, llm.NewValidationError("too many messages (max 1000)", "too_many_messages"))
 		return
 	}
 
@@ -586,7 +589,7 @@ func (h *ChatHandler) handleStreamingChat(
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		log.Error().Msg("Streaming not supported by response writer")
-		http.Error(w, "Streaming not supported", http.StatusInternalServerError)
+		writeError(w, llm.NewInternalError("Streaming not supported"))
 		return
 	}
 
@@ -680,14 +683,14 @@ func (h *ChatHandler) handleStreamingChat(
 		jsonData, err := json.Marshal(streamResponse)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to marshal stream chunk")
-			return err
+			return llm.NewInternalError(fmt.Sprintf("failed to marshal stream chunk: %v", err))
 		}
 
 		// Write SSE format: "data: {json}\n\n"
 		_, err = fmt.Fprintf(w, "data: %s\n\n", jsonData)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to write stream chunk")
-			return err
+			return llm.NewInternalError(fmt.Sprintf("failed to write stream chunk: %v", err))
 		}
 
 		// Flush to send data immediately
@@ -698,31 +701,27 @@ func (h *ChatHandler) handleStreamingChat(
 	if err != nil {
 		log.Error().Err(err).Msg("Streaming chat request failed")
 
-		// Check if it's a ProviderError
+		// Standardize error to ProviderError
+		var pe *llm.ProviderError
 		if providerErr, ok := err.(*llm.ProviderError); ok {
-			errorResponse := map[string]interface{}{
-				"error": map[string]interface{}{
-					"message":    providerErr.Message,
-					"type":       providerErr.Type,
-					"code":       providerErr.Code,
-					"param":      providerErr.Param,
-					"statusCode": providerErr.StatusCode,
-				},
-			}
-
-			jsonData, _ := json.Marshal(errorResponse)
-			fmt.Fprintf(w, "data: %s\n\n", jsonData)
-			flusher.Flush()
-			return
+			pe = providerErr
+		} else {
+			pe = llm.NewInternalError("Internal server error")
 		}
 
-		// For other errors, send error in SSE format
 		errorResponse := map[string]interface{}{
 			"error": map[string]interface{}{
-				"message": "Internal server error",
-				"type":    "internal_error",
+				"message":    pe.Message,
+				"type":       pe.Type,
+				"code":       pe.Code,
+				"param":      pe.Param,
+				"statusCode": pe.StatusCode,
 			},
 		}
+		if len(pe.Raw) > 0 {
+			errorResponse["raw"] = json.RawMessage(pe.Raw)
+		}
+
 		jsonData, _ := json.Marshal(errorResponse)
 		fmt.Fprintf(w, "data: %s\n\n", jsonData)
 		flusher.Flush()
