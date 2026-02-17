@@ -101,7 +101,10 @@ func (c *Client) ChatStream(
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		respBody, _ := io.ReadAll(io.LimitReader(resp.Body, maxResponseBytes))
+		respBody, readErr := io.ReadAll(io.LimitReader(resp.Body, maxResponseBytes))
+		if readErr != nil {
+			return fmt.Errorf("read error response: %w", readErr)
+		}
 		if err := checkError(resp.StatusCode, respBody); err != nil {
 			return err
 		}
@@ -112,10 +115,11 @@ func (c *Client) ChatStream(
 
 // endpoint returns the full chat completions URL.
 func (c *Client) endpoint() string {
-	if strings.Contains(c.cfg.BaseURL, "openai.azure.com"){
-		return strings.TrimRight(c.cfg.BaseURL, "/")
+	baseURL := strings.TrimRight(c.cfg.BaseURL, "/")
+	if strings.Contains(baseURL, "openai.azure.com") {
+		return baseURL
 	}
-	return strings.TrimRight(c.cfg.BaseURL, "/") + "/chat/completions"
+	return baseURL + "/chat/completions"
 }
 
 // checkError inspects the status code and tries to parse an API error.
@@ -145,13 +149,26 @@ func checkError(statusCode int, body []byte) error {
 
 // readSSEStream reads an SSE stream and dispatches parsed chunks to callback.
 func readSSEStream(
-	_ context.Context,
+	ctx context.Context,
 	r io.Reader,
 	callback func(*llm.StreamChunk) error,
 ) error {
+	// Set buffer size to handle large chunks efficiently (64KB)
+	const maxScanTokenSize = 64 * 1024
 	scanner := bufio.NewScanner(r)
+	buf := make([]byte, 0, bufio.MaxScanTokenSize)
+	scanner.Buffer(buf, maxScanTokenSize)
+
+	log := logger.FromContext(ctx)
 
 	for scanner.Scan() {
+		// Check context cancellation
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
 		line := scanner.Text()
 
 		if strings.TrimSpace(line) == "" {
@@ -170,7 +187,8 @@ func readSSEStream(
 
 		chunk, err := parseStreamChunk([]byte(data))
 		if err != nil {
-			// Non-fatal: log and continue.
+			// Log parse errors but continue processing stream
+			log.Warn().Err(err).Str("data", data).Msg("Failed to parse stream chunk")
 			continue
 		}
 
@@ -215,7 +233,9 @@ func parseStreamChunk(data []byte) (*llm.StreamChunk, error) {
 		}
 		if len(c.Delta.ToolCalls) > 0 {
 			sc.Delta.ToolCalls = make([]interface{}, len(c.Delta.ToolCalls))
-			copy(sc.Delta.ToolCalls, c.Delta.ToolCalls)
+			for i, tc := range c.Delta.ToolCalls {
+				sc.Delta.ToolCalls[i] = tc
+			}
 		}
 		if c.FinishReason != nil {
 			sc.FinishReason = c.FinishReason

@@ -14,7 +14,7 @@ var Log zerolog.Logger
 func Init() {
 	zerolog.TimeFieldFormat = time.RFC3339
 
-	var env string = os.Getenv("APP_ENV")
+	env := os.Getenv("APP_ENV")
 
 	if env == "production" {
 		Log = zerolog.New(os.Stdout).
