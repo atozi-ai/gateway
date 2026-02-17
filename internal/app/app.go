@@ -49,26 +49,13 @@ func Start() {
 		IdleTimeout:  60 * time.Second,
 	}
 
-	// Channel to signal server is ready
-	serverReady := make(chan bool, 1)
-
 	// Start server in a goroutine
 	go func() {
 		logger.Log.Info().Str("port", port).Msg("Starting HTTP server")
-
-		// Signal that server is starting to listen
-		serverReady <- true
-
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Log.Fatal().Err(err).Msg("Failed to start server")
 		}
 	}()
-
-	// Wait for server to be ready and log success
-	<-serverReady
-	// Small delay to ensure server is actually listening
-	time.Sleep(100 * time.Millisecond)
-	logger.Log.Info().Str("port", port).Msg("Server started successfully")
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
