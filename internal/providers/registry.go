@@ -12,6 +12,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/providers/openai"
 	"github.com/atozi-ai/gateway/internal/providers/xai"
 	"github.com/atozi-ai/gateway/internal/providers/zai"
+	"github.com/atozi-ai/gateway/internal/retry"
 )
 
 type ProviderManager struct {
@@ -103,6 +104,12 @@ func (m *ProviderManager) getProvider(name string, apiKey string, endpoint strin
 	}
 
 	wrappedProvider := m.cbManager.WrapProvider(provider)
+	wrappedProvider = retry.NewRetryableProvider(wrappedProvider, retry.Config{
+		MaxRetries:   3,
+		InitialDelay: 500 * time.Millisecond,
+		MaxDelay:     10 * time.Second,
+		Multiplier:   2.0,
+	})
 	m.providers[cacheKey] = wrappedProvider
 
 	return wrappedProvider, nil
