@@ -195,7 +195,7 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 		writeError(w, llm.NewUnauthorizedError("missing Authorization header"))
 		return
 	}
-	
+
 	const bearerPrefix = "Bearer "
 	if !strings.HasPrefix(authHeader, bearerPrefix) {
 		writeError(w, llm.NewValidationError("invalid Authorization header format", "invalid_auth_format"))

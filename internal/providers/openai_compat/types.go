@@ -9,27 +9,27 @@ import (
 // --- Chat completions request ---
 
 type chatRequest struct {
-	Model             string              `json:"model"`
-	Messages          []llm.Message       `json:"messages"`
-	FrequencyPenalty  *float32            `json:"frequency_penalty,omitempty"`
-	LogitBias         map[string]int      `json:"logit_bias,omitempty"`
-	Logprobs          *bool               `json:"logprobs,omitempty"`
-	TopLogprobs       *int                `json:"top_logprobs,omitempty"`
-	MaxTokens         *int                `json:"max_tokens,omitempty"`
-	N                 *int                `json:"n,omitempty"`
-	PresencePenalty   *float32            `json:"presence_penalty,omitempty"`
-	ResponseFormat    *responseFormat     `json:"response_format,omitempty"`
-	Seed              *int                `json:"seed,omitempty"`
-	Stop              []string            `json:"stop,omitempty"`
-	Stream            *bool               `json:"stream,omitempty"`
-	StreamOptions     *streamOptions      `json:"stream_options,omitempty"`
-	Temperature       *float32            `json:"temperature,omitempty"`
-	ToolChoice        interface{}         `json:"tool_choice,omitempty"`
-	Tools             []tool              `json:"tools,omitempty"`
-	TopP              *float32            `json:"top_p,omitempty"`
-	User              *string             `json:"user,omitempty"`
-	ParallelToolCalls *bool               `json:"parallel_tool_calls,omitempty"`
-	Verbosity         *llm.Verbosity      `json:"verbosity,omitempty"`
+	Model             string          `json:"model"`
+	Messages          []llm.Message   `json:"messages"`
+	FrequencyPenalty  *float32        `json:"frequency_penalty,omitempty"`
+	LogitBias         map[string]int  `json:"logit_bias,omitempty"`
+	Logprobs          *bool           `json:"logprobs,omitempty"`
+	TopLogprobs       *int            `json:"top_logprobs,omitempty"`
+	MaxTokens         *int            `json:"max_tokens,omitempty"`
+	N                 *int            `json:"n,omitempty"`
+	PresencePenalty   *float32        `json:"presence_penalty,omitempty"`
+	ResponseFormat    *responseFormat `json:"response_format,omitempty"`
+	Seed              *int            `json:"seed,omitempty"`
+	Stop              []string        `json:"stop,omitempty"`
+	Stream            *bool           `json:"stream,omitempty"`
+	StreamOptions     *streamOptions  `json:"stream_options,omitempty"`
+	Temperature       *float32        `json:"temperature,omitempty"`
+	ToolChoice        interface{}     `json:"tool_choice,omitempty"`
+	Tools             []tool          `json:"tools,omitempty"`
+	TopP              *float32        `json:"top_p,omitempty"`
+	User              *string         `json:"user,omitempty"`
+	ParallelToolCalls *bool           `json:"parallel_tool_calls,omitempty"`
+	Verbosity         *llm.Verbosity  `json:"verbosity,omitempty"`
 }
 
 type responseFormat struct {
@@ -61,14 +61,14 @@ type streamOptions struct {
 // --- Chat completions response ---
 
 type chatResponse struct {
-	ID                string    `json:"id"`
-	Object            string    `json:"object"`
-	Created           int64     `json:"created"`
-	Model             string    `json:"model"`
-	SystemFingerprint *string   `json:"system_fingerprint,omitempty"`
-	Choices           []choice  `json:"choices"`
-	Usage             *usage    `json:"usage,omitempty"`
-	ServiceTier       *string   `json:"service_tier,omitempty"`
+	ID                string   `json:"id"`
+	Object            string   `json:"object"`
+	Created           int64    `json:"created"`
+	Model             string   `json:"model"`
+	SystemFingerprint *string  `json:"system_fingerprint,omitempty"`
+	Choices           []choice `json:"choices"`
+	Usage             *usage   `json:"usage,omitempty"`
+	ServiceTier       *string  `json:"service_tier,omitempty"`
 }
 
 type choice struct {
@@ -102,10 +102,10 @@ type logprobs struct {
 }
 
 type logprobContent struct {
-	Token       string        `json:"token"`
-	Logprob     float64       `json:"logprob"`
-	Bytes       []int         `json:"bytes,omitempty"`
-	TopLogprobs []topLogprob  `json:"top_logprobs,omitempty"`
+	Token       string       `json:"token"`
+	Logprob     float64      `json:"logprob"`
+	Bytes       []int        `json:"bytes,omitempty"`
+	TopLogprobs []topLogprob `json:"top_logprobs,omitempty"`
 }
 
 type topLogprob struct {
@@ -153,10 +153,10 @@ type streamChunk struct {
 }
 
 type streamChoice struct {
-	Index        int          `json:"index"`
-	Delta        streamDelta  `json:"delta"`
-	FinishReason *string      `json:"finish_reason,omitempty"`
-	Logprobs     interface{}  `json:"logprobs,omitempty"`
+	Index        int         `json:"index"`
+	Delta        streamDelta `json:"delta"`
+	FinishReason *string     `json:"finish_reason,omitempty"`
+	Logprobs     interface{} `json:"logprobs,omitempty"`
 }
 
 type streamDelta struct {

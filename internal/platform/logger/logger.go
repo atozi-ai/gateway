@@ -41,11 +41,11 @@ func FromContext(ctx context.Context) zerolog.Logger {
 	if ctx == nil {
 		return Log
 	}
-	
+
 	requestID := middleware.GetReqID(ctx)
 	if requestID != "" {
 		return Log.With().Str("request_id", requestID).Logger()
 	}
-	
+
 	return Log
 }
