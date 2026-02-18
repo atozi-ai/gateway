@@ -61,10 +61,17 @@ func NewClientWithCustomHTTP(cfg Config, httpClient *http.Client) *Client {
 }
 
 // setHeaders applies standard and custom headers to the request.
-func (c *Client) setHeaders(req *http.Request) {
+// If the request has an APIKey, it will be used instead of the client's default.
+func (c *Client) setHeaders(req *http.Request, apiKey string) {
+	// Use API key from request if provided, otherwise use client's default
+	key := apiKey
+	if key == "" {
+		key = c.cfg.APIKey
+	}
+
 	// Skip Authorization header if api-key header is provided (e.g., Azure)
 	if _, hasAPIKey := c.cfg.Headers["api-key"]; !hasAPIKey {
-		req.Header.Set("Authorization", "Bearer "+c.cfg.APIKey)
+		req.Header.Set("Authorization", "Bearer "+key)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	for k, v := range c.cfg.Headers {

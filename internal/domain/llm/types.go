@@ -9,6 +9,7 @@ type ChatRequest struct {
 	Model    string
 	Messages []Message
 	Options  ChatOptions
+	APIKey   string // API key to use for this request (overrides provider's default)
 }
 
 type ChatResponse struct {
