@@ -34,3 +34,7 @@ go.work.sum
 
 # Local files
 local/
+
+# Documentation (generated)
+FEATURES.md
+TODO.md
