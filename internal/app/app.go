@@ -68,10 +68,12 @@ func Start() {
 	})
 
 	chatHandler := handlers.NewChatHandler()
+	modelsHandler := handlers.NewModelsHandler()
 
 	r.Route("/api/v1", func(r chi.Router) {
 		ratelimit.RegisterRateLimiter(r, rateLimiter)
 		chatHandler.RegisterRoutes(r)
+		modelsHandler.RegisterRoutes(r)
 	})
 
 	port := os.Getenv("PORT")
