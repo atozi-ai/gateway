@@ -2,8 +2,32 @@ package openaicompat
 
 import (
 	"net/http"
+	"sync"
 	"time"
 )
+
+var (
+	sharedHTTPClient *http.Client
+	once             sync.Once
+)
+
+func initSharedClient() {
+	transport := &http.Transport{
+		MaxIdleConns:        200,
+		MaxIdleConnsPerHost: 50,
+		IdleConnTimeout:     90 * time.Second,
+		TLSHandshakeTimeout: 10 * time.Second,
+	}
+	sharedHTTPClient = &http.Client{
+		Timeout:   120 * time.Second,
+		Transport: transport,
+	}
+}
+
+func getSharedClient() *http.Client {
+	once.Do(initSharedClient)
+	return sharedHTTPClient
+}
 
 // Config holds settings for an OpenAI-compatible API client.
 type Config struct {
@@ -19,22 +43,20 @@ type Client struct {
 }
 
 // NewClient returns a ready-to-use Client for the given configuration.
+// Uses a shared HTTP client with connection pooling for better performance.
 func NewClient(cfg Config) *Client {
 	return &Client{
 		cfg:        cfg,
-		httpClient: newHTTPClient(),
+		httpClient: getSharedClient(),
 	}
 }
 
-func newHTTPClient() *http.Client {
-	transport := &http.Transport{
-		MaxIdleConns:        100,
-		MaxIdleConnsPerHost: 10,
-		IdleConnTimeout:     90 * time.Second,
-	}
-	return &http.Client{
-		Timeout:   60 * time.Second,
-		Transport: transport,
+// NewClientWithCustomHTTP returns a Client with a custom HTTP client.
+// Use this when you need different timeout or transport settings.
+func NewClientWithCustomHTTP(cfg Config, httpClient *http.Client) *Client {
+	return &Client{
+		cfg:        cfg,
+		httpClient: httpClient,
 	}
 }
 
