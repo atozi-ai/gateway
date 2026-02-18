@@ -170,7 +170,7 @@ func RateLimit(rl *RateLimiter) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			apiKey := extractAPIKey(r)
 			if apiKey == "" {
-				http.Error(w, "API key required for rate limiting", http.StatusUnauthorized)
+				http.Error(w, "API key required", http.StatusUnauthorized)
 				return
 			}
 
