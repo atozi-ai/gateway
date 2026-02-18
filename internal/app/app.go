@@ -5,14 +5,34 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
 	"github.com/atozi-ai/gateway/internal/handlers"
 	"github.com/atozi-ai/gateway/internal/platform/logger"
+	"github.com/atozi-ai/gateway/internal/ratelimit"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
+
+func getEnvFloat(key string, defaultVal float64) float64 {
+	if val := os.Getenv(key); val != "" {
+		if f, err := strconv.ParseFloat(val, 64); err == nil {
+			return f
+		}
+	}
+	return defaultVal
+}
+
+func getEnvInt(key string, defaultVal int) int {
+	if val := os.Getenv(key); val != "" {
+		if i, err := strconv.Atoi(val); err == nil {
+			return i
+		}
+	}
+	return defaultVal
+}
 
 func Start() {
 	logger.Init()
@@ -25,6 +45,23 @@ func Start() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
+	rateLimitConfig := ratelimit.RateLimitConfig{
+		RequestsPerSecond: getEnvFloat("RATE_LIMIT_REQUESTS_PER_SECOND", 10),
+		RequestsPerMinute: getEnvInt("RATE_LIMIT_REQUESTS_PER_MINUTE", 0),
+		RequestsPerHour:   getEnvInt("RATE_LIMIT_REQUESTS_PER_HOUR", 0),
+		RequestsPerDay:    getEnvInt("RATE_LIMIT_REQUESTS_PER_DAY", 0),
+		Burst:             getEnvInt("RATE_LIMIT_BURST", 20),
+	}
+
+	rateLimiter := ratelimit.NewRateLimiter(rateLimitConfig)
+	logger.Log.Info().
+		Float64("requests_per_second", rateLimitConfig.RequestsPerSecond).
+		Int("requests_per_minute", rateLimitConfig.RequestsPerMinute).
+		Int("requests_per_hour", rateLimitConfig.RequestsPerHour).
+		Int("requests_per_day", rateLimitConfig.RequestsPerDay).
+		Int("burst", rateLimitConfig.Burst).
+		Msg("Rate limiting enabled")
+
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
@@ -33,6 +70,7 @@ func Start() {
 	chatHandler := handlers.NewChatHandler()
 
 	r.Route("/api/v1", func(r chi.Router) {
+		ratelimit.RegisterRateLimiter(r, rateLimiter)
 		chatHandler.RegisterRoutes(r)
 	})
 
