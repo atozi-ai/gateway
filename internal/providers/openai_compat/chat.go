@@ -32,7 +32,7 @@ func (c *Client) Chat(ctx context.Context, req llm.ChatRequest) (*llm.ChatRespon
 	if err != nil {
 		return nil, llm.NewInternalError(fmt.Sprintf("failed to create request: %v", err))
 	}
-	c.setHeaders(httpReq)
+	c.setHeaders(httpReq, req.APIKey)
 
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {
@@ -92,7 +92,7 @@ func (c *Client) ChatStream(
 	if err != nil {
 		return llm.NewInternalError(fmt.Sprintf("failed to create request: %v", err))
 	}
-	c.setHeaders(httpReq)
+	c.setHeaders(httpReq, req.APIKey)
 
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {

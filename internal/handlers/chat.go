@@ -232,6 +232,7 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 	req := llm.ChatRequest{
 		Model:    payload.Model,
 		Messages: payload.Messages,
+		APIKey:   apiKey,
 	}
 
 	streamQueryParam := r.URL.Query().Get("stream")

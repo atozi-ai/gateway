@@ -66,7 +66,7 @@ func (m *ProviderManager) Get(qualifiedModel string, apiKey string, endpoint str
 			}
 		}
 
-		provider, err := m.getProvider(providerName, apiKey, endpoint, true)
+		provider, err := m.getProvider(providerName, endpoint, true)
 		if err != nil {
 			return nil, "", err
 		}
@@ -93,7 +93,7 @@ func (m *ProviderManager) Get(qualifiedModel string, apiKey string, endpoint str
 			finalModel = model
 		}
 
-		provider, err := m.getProvider(providerName, apiKey, endpoint, enableRetries)
+		provider, err := m.getProvider(providerName, endpoint, enableRetries)
 		if err != nil {
 			logger.Log.Warn().
 				Str("model_spec", modelSpec).
@@ -121,8 +121,8 @@ func (m *ProviderManager) Get(qualifiedModel string, apiKey string, endpoint str
 	return failoverProvider, finalModel, nil
 }
 
-func (m *ProviderManager) getProvider(name string, apiKey string, endpoint string, enableRetry bool) (llm.Provider, error) {
-	cacheKey := fmt.Sprintf("%s:%s:%s:%v", name, apiKey, endpoint, enableRetry)
+func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry bool) (llm.Provider, error) {
+	cacheKey := fmt.Sprintf("%s:%s:%v", name, endpoint, enableRetry)
 
 	m.mu.RLock()
 	if provider, exists := m.providers[cacheKey]; exists {
@@ -141,7 +141,7 @@ func (m *ProviderManager) getProvider(name string, apiKey string, endpoint strin
 	var baseProvider llm.Provider
 	switch name {
 	case "openai":
-		baseProvider = openai.New(apiKey)
+		baseProvider = openai.New("")
 	case "azure":
 		if endpoint == "" {
 			return nil, &llm.ProviderError{
@@ -151,11 +151,11 @@ func (m *ProviderManager) getProvider(name string, apiKey string, endpoint strin
 				Code:       "missing_endpoint",
 			}
 		}
-		baseProvider = azure.New(apiKey, endpoint)
+		baseProvider = azure.New("", endpoint)
 	case "xai":
-		baseProvider = xai.New(apiKey)
+		baseProvider = xai.New("")
 	case "zai":
-		baseProvider = zai.New(apiKey)
+		baseProvider = zai.New("")
 	default:
 		return nil, &llm.ProviderError{
 			StatusCode: 400,
