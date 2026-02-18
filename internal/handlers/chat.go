@@ -555,46 +555,43 @@ type idleTimeoutContext struct {
 	lastActivity time.Time
 	timeout      time.Duration
 	cancel       func()
-	started      bool
-	startMu      sync.Mutex
+	once         sync.Once
+	doneCh       chan struct{}
 }
 
 func (i *idleTimeoutContext) Done() <-chan struct{} {
-	i.startMu.Lock()
-	defer i.startMu.Unlock()
+	i.once.Do(func() {
+		i.doneCh = make(chan struct{})
+		go func() {
+			ticker := time.NewTicker(10 * time.Second)
+			defer ticker.Stop()
 
-	if i.started {
-		return i.Context.Done()
-	}
-	i.started = true
-
-	ch := make(chan struct{})
-	go func() {
-		ticker := time.NewTicker(10 * time.Second)
-		defer ticker.Stop()
-
-		for {
-			select {
-			case <-i.Context.Done():
-				close(ch)
-				return
-			case <-ticker.C:
-				i.mu.RLock()
-				since := time.Since(i.lastActivity)
-				i.mu.RUnlock()
-
-				if since > i.timeout {
-					i.cancel()
-					close(ch)
+			for {
+				select {
+				case <-i.Context.Done():
+					close(i.doneCh)
 					return
+				case <-ticker.C:
+					i.mu.RLock()
+					since := time.Since(i.lastActivity)
+					i.mu.RUnlock()
+
+					if since > i.timeout {
+						i.cancel()
+						close(i.doneCh)
+						return
+					}
 				}
 			}
-		}
-	}()
-	return ch
+		}()
+	})
+	return i.doneCh
 }
 
 func (i *idleTimeoutContext) Err() error {
+	if i.doneCh == nil {
+		return nil
+	}
 	return i.Context.Err()
 }
 
