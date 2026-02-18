@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/atozi-ai/gateway/internal/domain/llm"
@@ -53,8 +54,8 @@ type ChatOptionsPayload struct {
 
 	Stream             *bool                 `json:"stream,omitempty"`
 	StreamOptions      *StreamOptionsPayload `json:"streamOptions,omitempty"`
-	Raw                *bool                 `json:"raw,omitempty"`                // Include raw provider response
-	IncludeAccumulated *bool                 `json:"includeAccumulated,omitempty"` // Include top-level accumulated content field
+	Raw                *bool                 `json:"raw,omitempty"`
+	IncludeAccumulated *bool                 `json:"includeAccumulated,omitempty"`
 }
 
 type ToolPayload struct {
@@ -74,12 +75,12 @@ type ToolResolutionPayload struct {
 
 type StreamOptionsPayload struct {
 	IncludeUsage       *bool `json:"includeUsage,omitempty"`
-	IncludeAccumulated *bool `json:"includeAccumulated,omitempty"` // Include accumulated content in each chunk
+	IncludeAccumulated *bool `json:"includeAccumulated,omitempty"`
 }
 
 type ResponseFormatPayload struct {
-	Type   string          `json:"type"`             // "json_schema" or "json_object"
-	Schema json.RawMessage `json:"schema,omitempty"` // JSON schema for structured output
+	Type   string          `json:"type"`
+	Schema json.RawMessage `json:"schema,omitempty"`
 }
 
 type ChatResponsePayload struct {
@@ -91,9 +92,9 @@ type ChatResponsePayload struct {
 	Choices           []ChoicePayload `json:"choices"`
 	Usage             *UsagePayload   `json:"usage,omitempty"`
 	ServiceTier       *string         `json:"serviceTier,omitempty"`
-	Content           string          `json:"content,omitempty"` // Convenience field for first choice content (accumulated)
-	Parsed            json.RawMessage `json:"parsed,omitempty"`  // Parsed structured response if schema was provided
-	Raw               json.RawMessage `json:"raw,omitempty"`     // Raw response from provider
+	Content           string          `json:"content,omitempty"`
+	Parsed            json.RawMessage `json:"parsed,omitempty"`
+	Raw               json.RawMessage `json:"raw,omitempty"`
 }
 
 type ChoicePayload struct {
@@ -106,7 +107,7 @@ type ChoicePayload struct {
 type MessagePayload struct {
 	Role               string            `json:"role"`
 	Content            string            `json:"content"`
-	AccumulatedContent *string           `json:"accumulatedContent,omitempty"` // Full accumulated content from all chunks
+	AccumulatedContent *string           `json:"accumulatedContent,omitempty"`
 	Refusal            *string           `json:"refusal,omitempty"`
 	Annotations        []interface{}     `json:"annotations,omitempty"`
 	ToolCalls          []ToolCallPayload `json:"toolCalls,omitempty"`
@@ -156,13 +157,11 @@ type TokensDetailsPayload struct {
 	RejectedPredictionTokens *int `json:"rejectedPredictionTokens,omitempty"`
 }
 
-// writeError writes a ProviderError as JSON, or falls back to a standardized internal error.
 func writeError(w http.ResponseWriter, err error) {
 	var pe *llm.ProviderError
 	if providerErr, ok := err.(*llm.ProviderError); ok {
 		pe = providerErr
 	} else {
-		// Wrap non-ProviderError errors as internal errors
 		pe = llm.NewInternalError("Internal server error")
 	}
 
@@ -186,10 +185,8 @@ func writeError(w http.ResponseWriter, err error) {
 }
 
 func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
-	// Get logger with request ID from context
 	log := logger.FromContext(r.Context())
 
-	// Extract API key from Authorization header (Bearer <key>).
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		writeError(w, llm.NewUnauthorizedError("missing Authorization header"))
@@ -217,7 +214,6 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate required fields
 	if payload.Model == "" {
 		writeError(w, llm.NewValidationError("model is required", "missing_model"))
 		return
@@ -233,25 +229,20 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create chat request
 	req := llm.ChatRequest{
 		Model:    payload.Model,
 		Messages: payload.Messages,
 	}
 
-	// Check for stream parameter in query string as fallback
 	streamQueryParam := r.URL.Query().Get("stream")
 	if streamQueryParam != "" && (payload.Options == nil || payload.Options.Stream == nil) {
-		// Initialize Options if nil
 		if payload.Options == nil {
 			payload.Options = &ChatOptionsPayload{}
 		}
-		// Parse stream query parameter
 		streamValue := streamQueryParam == "true" || streamQueryParam == "1"
 		payload.Options.Stream = &streamValue
 	}
 
-	// Check for raw parameter - from options first, then query string as fallback
 	includeRaw := false
 	if payload.Options != nil && payload.Options.Raw != nil {
 		includeRaw = *payload.Options.Raw
@@ -260,7 +251,6 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 		includeRaw = rawQueryParam == "true" || rawQueryParam == "1"
 	}
 
-	// Check for includeAccumulated parameter - from options first, then query string as fallback
 	includeAccumulated := false
 	if payload.Options != nil && payload.Options.IncludeAccumulated != nil {
 		includeAccumulated = *payload.Options.IncludeAccumulated
@@ -269,7 +259,6 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 		includeAccumulated = accumulatedQueryParam == "true" || accumulatedQueryParam == "1"
 	}
 
-	// Convert options if provided
 	if payload.Options != nil {
 		req.Options = llm.ChatOptions{
 			Temperature:       payload.Options.Temperature,
@@ -289,7 +278,6 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 			ParallelToolCalls: payload.Options.ParallelToolCalls,
 		}
 
-		// Handle response format for structured output
 		if payload.Options.ResponseFormat != nil {
 			req.Options.ResponseFormat = &llm.ResponseFormat{
 				Type:   payload.Options.ResponseFormat.Type,
@@ -297,7 +285,6 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		// Handle tools
 		if len(payload.Options.Tools) > 0 {
 			req.Options.Tools = make([]llm.Tool, len(payload.Options.Tools))
 			for i, tool := range payload.Options.Tools {
@@ -314,19 +301,16 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		// Handle tool choice
 		if payload.Options.ToolChoice != nil {
 			req.Options.ToolChoice = payload.Options.ToolChoice
 		}
 
-		// Handle tool resolution
 		if payload.Options.ToolResolution != nil {
 			req.Options.ToolResolution = &llm.ToolResolution{
 				Type: payload.Options.ToolResolution.Type,
 			}
 		}
 
-		// Handle stream options
 		if payload.Options.StreamOptions != nil {
 			req.Options.StreamOptions = &llm.StreamOptions{
 				IncludeUsage:       payload.Options.StreamOptions.IncludeUsage,
@@ -335,7 +319,6 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Get provider and call chat
 	provider, model, err := providers.Get(req.Model, apiKey, payload.Endpoint)
 	if err != nil {
 		log.Error().Err(err).Str("model", req.Model).Msg("Invalid provider/model")
@@ -351,11 +334,19 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 		Bool("stream", req.Options.Stream != nil && *req.Options.Stream).
 		Msg("Processing chat request")
 
-	ctx, cancel := context.WithTimeout(r.Context(), 120*time.Second)
+	isStreaming := req.Options.Stream != nil && *req.Options.Stream
+
+	var ctx context.Context
+	var cancel context.CancelFunc
+
+	if isStreaming {
+		ctx, cancel = h.createIdleTimeoutContext(r.Context(), 180*time.Second)
+	} else {
+		ctx, cancel = context.WithTimeout(r.Context(), 180*time.Second)
+	}
 	defer cancel()
 
-	// Check if streaming is requested
-	if req.Options.Stream != nil && *req.Options.Stream {
+	if isStreaming {
 		h.handleStreamingChat(w, ctx, provider, req, log, includeRaw, includeAccumulated)
 		return
 	}
@@ -367,7 +358,6 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Parse raw response to extract all fields
 	type rawResponse struct {
 		ID                string  `json:"id"`
 		Object            string  `json:"object"`
@@ -427,23 +417,19 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var parsedResponse rawResponse
-	// Try to parse the raw response
 	if len(resp.Raw) > 0 {
 		if err := json.Unmarshal(resp.Raw, &parsedResponse); err != nil {
 			log.Warn().Err(err).Msg("Failed to parse raw response, using basic fields")
-			// Fallback to basic response
 			parsedResponse.ID = resp.ID
 			parsedResponse.Model = resp.Model
 			parsedResponse.Object = "chat.completion"
 		}
 	} else {
-		// Fallback if raw is empty
 		parsedResponse.ID = resp.ID
 		parsedResponse.Model = resp.Model
 		parsedResponse.Object = "chat.completion"
 	}
 
-	// Convert choices from raw response format to payload format
 	choices := make([]ChoicePayload, len(parsedResponse.Choices))
 	for i, choice := range parsedResponse.Choices {
 		toolCalls := make([]ToolCallPayload, len(choice.Message.ToolCalls))
@@ -496,7 +482,6 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Convert usage
 	var usage *UsagePayload
 	if parsedResponse.Usage != nil {
 		var promptDetails *TokensDetailsPayload
@@ -528,7 +513,6 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Build response
 	response := ChatResponsePayload{
 		ID:                parsedResponse.ID,
 		Object:            parsedResponse.Object,
@@ -540,24 +524,19 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 		ServiceTier:       parsedResponse.ServiceTier,
 	}
 
-	// Include top-level content field (accumulated) if requested
 	if includeAccumulated {
-		response.Content = resp.Content // Convenience field
+		response.Content = resp.Content
 	}
 
-	// Include raw provider response if requested
 	if includeRaw && len(resp.Raw) > 0 {
 		response.Raw = resp.Raw
 	}
 
-	// If structured response was requested, parse the content as JSON
 	if req.Options.ResponseFormat != nil && resp.Content != "" {
-		// Try to parse the content as JSON
 		var parsed json.RawMessage
 		if err := json.Unmarshal([]byte(resp.Content), &parsed); err == nil {
 			response.Parsed = parsed
 		} else {
-			// If parsing fails, log but don't fail the request
 			log.Warn().Err(err).Msg("Failed to parse structured response as JSON")
 		}
 	}
@@ -565,9 +544,73 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Error().Err(err).Msg("Failed to encode response")
-		// Response may have been partially written, can't use http.Error
 		return
 	}
+}
+
+type idleTimeoutContext struct {
+	context.Context
+	mu           sync.RWMutex
+	lastActivity time.Time
+	timeout      time.Duration
+	cancel       func()
+	started      bool
+	startMu      sync.Mutex
+}
+
+func (i *idleTimeoutContext) Done() <-chan struct{} {
+	i.startMu.Lock()
+	defer i.startMu.Unlock()
+
+	if i.started {
+		return i.Context.Done()
+	}
+	i.started = true
+
+	ch := make(chan struct{})
+	go func() {
+		ticker := time.NewTicker(10 * time.Second)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-i.Context.Done():
+				close(ch)
+				return
+			case <-ticker.C:
+				i.mu.RLock()
+				since := time.Since(i.lastActivity)
+				i.mu.RUnlock()
+
+				if since > i.timeout {
+					i.cancel()
+					close(ch)
+					return
+				}
+			}
+		}
+	}()
+	return ch
+}
+
+func (i *idleTimeoutContext) Err() error {
+	return i.Context.Err()
+}
+
+func (i *idleTimeoutContext) RecordActivity() {
+	i.mu.Lock()
+	i.lastActivity = time.Now()
+	i.mu.Unlock()
+}
+
+func (h *ChatHandler) createIdleTimeoutContext(ctx context.Context, timeout time.Duration) (context.Context, context.CancelFunc) {
+	baseCtx, cancel := context.WithCancel(ctx)
+	return &idleTimeoutContext{
+		Context:      baseCtx,
+		lastActivity: time.Now(),
+		timeout:      timeout,
+		cancel:       cancel,
+	}, cancel
 }
 
 func (h *ChatHandler) handleStreamingChat(
@@ -579,13 +622,11 @@ func (h *ChatHandler) handleStreamingChat(
 	includeRaw bool,
 	includeAccumulated bool,
 ) {
-	// Set up Server-Sent Events headers
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
-	w.Header().Set("X-Accel-Buffering", "no") // Disable buffering in nginx
+	w.Header().Set("X-Accel-Buffering", "no")
 
-	// Create a flusher to enable streaming
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		log.Error().Msg("Streaming not supported by response writer")
@@ -593,17 +634,22 @@ func (h *ChatHandler) handleStreamingChat(
 		return
 	}
 
-	// Check if accumulated content is requested in message payload
 	includeAccumulatedInMessage := req.Options.StreamOptions != nil &&
 		req.Options.StreamOptions.IncludeAccumulated != nil &&
 		*req.Options.StreamOptions.IncludeAccumulated
 
-	// Always track accumulated content for top-level content field
 	accumulatedContent := make(map[int]string)
 
-	// Stream chunks from provider
+	idleCtx, ok := ctx.(*idleTimeoutContext)
+	if ok {
+		idleCtx.RecordActivity()
+	}
+
 	err := provider.ChatStream(ctx, req, func(chunk *llm.StreamChunk) error {
-		// Convert chunk to response format
+		if ok {
+			idleCtx.RecordActivity()
+		}
+
 		choices := make([]ChoicePayload, len(chunk.Choices))
 		for i, choice := range chunk.Choices {
 			message := MessagePayload{
@@ -615,15 +661,12 @@ func (h *ChatHandler) handleStreamingChat(
 				message.Role = *choice.Delta.Role
 			}
 
-			// Handle delta content
 			if choice.Delta.Content != nil {
 				deltaContent := *choice.Delta.Content
-				message.Content = deltaContent // Delta content for this chunk only
+				message.Content = deltaContent
 
-				// Always accumulate content for top-level field
 				accumulatedContent[choice.Index] += deltaContent
 
-				// Set accumulated content in message if requested
 				if includeAccumulatedInMessage {
 					if accContent := accumulatedContent[choice.Index]; accContent != "" {
 						message.AccumulatedContent = &accContent
@@ -650,13 +693,10 @@ func (h *ChatHandler) handleStreamingChat(
 			}
 		}
 
-		// Get accumulated content for top-level content field
-		// Use first choice index if available, otherwise use index 0 (most common case)
 		var content string
 		if len(choices) > 0 {
 			content = accumulatedContent[choices[0].Index]
 		} else {
-			// If no choices in this chunk (e.g., final usage chunk), use accumulated content from index 0
 			content = accumulatedContent[0]
 		}
 
@@ -669,31 +709,26 @@ func (h *ChatHandler) handleStreamingChat(
 			Usage:   usage,
 		}
 
-		// Include top-level content field (accumulated) if requested
 		if includeAccumulated {
-			streamResponse.Content = content // Accumulated content from all previous chunks
+			streamResponse.Content = content
 		}
 
-		// Include raw provider response if requested
 		if includeRaw && len(chunk.Raw) > 0 {
 			streamResponse.Raw = json.RawMessage(chunk.Raw)
 		}
 
-		// Marshal to JSON
 		jsonData, err := json.Marshal(streamResponse)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to marshal stream chunk")
 			return llm.NewInternalError(fmt.Sprintf("failed to marshal stream chunk: %v", err))
 		}
 
-		// Write SSE format: "data: {json}\n\n"
 		_, err = fmt.Fprintf(w, "data: %s\n\n", jsonData)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to write stream chunk")
 			return llm.NewInternalError(fmt.Sprintf("failed to write stream chunk: %v", err))
 		}
 
-		// Flush to send data immediately
 		flusher.Flush()
 		return nil
 	})
@@ -701,7 +736,6 @@ func (h *ChatHandler) handleStreamingChat(
 	if err != nil {
 		log.Error().Err(err).Msg("Streaming chat request failed")
 
-		// Standardize error to ProviderError
 		var pe *llm.ProviderError
 		if providerErr, ok := err.(*llm.ProviderError); ok {
 			pe = providerErr
@@ -728,7 +762,6 @@ func (h *ChatHandler) handleStreamingChat(
 		return
 	}
 
-	// Send [DONE] marker to indicate stream completion
 	fmt.Fprintf(w, "data: [DONE]\n\n")
 	flusher.Flush()
 }
