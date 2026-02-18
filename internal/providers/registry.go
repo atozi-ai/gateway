@@ -2,12 +2,15 @@ package providers
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/atozi-ai/gateway/internal/circuitbreaker"
 	"github.com/atozi-ai/gateway/internal/domain/llm"
+	"github.com/atozi-ai/gateway/internal/failover"
+	"github.com/atozi-ai/gateway/internal/platform/logger"
 	"github.com/atozi-ai/gateway/internal/providers/azure"
 	"github.com/atozi-ai/gateway/internal/providers/openai"
 	"github.com/atozi-ai/gateway/internal/providers/xai"
@@ -16,9 +19,10 @@ import (
 )
 
 type ProviderManager struct {
-	mu        sync.RWMutex
-	providers map[string]llm.Provider
-	cbManager *circuitbreaker.CircuitBreakerManager
+	mu                      sync.RWMutex
+	providers               map[string]llm.Provider
+	cbManager               *circuitbreaker.CircuitBreakerManager
+	enableRetryWithFallback bool
 }
 
 var (
@@ -28,39 +32,97 @@ var (
 
 func GetProviderManager() *ProviderManager {
 	managerOnce.Do(func() {
+		retryWithFallback := os.Getenv("RETRY_WITH_FALLBACK")
+		enableRetryWithFallback := retryWithFallback == "true" || retryWithFallback == "1"
+
 		defaultManager = &ProviderManager{
-			providers: make(map[string]llm.Provider),
+			providers:               make(map[string]llm.Provider),
+			enableRetryWithFallback: enableRetryWithFallback,
 			cbManager: circuitbreaker.NewCircuitBreakerManager(circuitbreaker.CircuitBreakerConfig{
 				FailureThreshold: 5,
 				SuccessThreshold: 3,
 				Timeout:          30 * time.Second,
 			}),
 		}
+
+		logger.Log.Info().
+			Bool("enable_retry_with_fallback", enableRetryWithFallback).
+			Msg("Provider manager initialized")
 	})
 	return defaultManager
 }
 
 func (m *ProviderManager) Get(qualifiedModel string, apiKey string, endpoint string) (llm.Provider, string, error) {
-	providerName, model, ok := strings.Cut(qualifiedModel, "/")
-	if !ok {
+	models := failover.ParseModelWithFallbacks(qualifiedModel)
+
+	if len(models) == 1 {
+		providerName, model, ok := strings.Cut(models[0], "/")
+		if !ok {
+			return nil, "", &llm.ProviderError{
+				StatusCode: 400,
+				Message:    fmt.Sprintf("model must be in provider/model format, got %q", qualifiedModel),
+				Type:       "invalid_request_error",
+				Code:       "invalid_model_format",
+			}
+		}
+
+		provider, err := m.getProvider(providerName, apiKey, endpoint, true)
+		if err != nil {
+			return nil, "", err
+		}
+
+		return provider, model, nil
+	}
+
+	var providersWithConfig []failover.ProviderWithConfig
+	var finalModel string
+	enableRetries := m.enableRetryWithFallback
+
+	for i, modelSpec := range models {
+		providerName, model, ok := strings.Cut(modelSpec, "/")
+		if !ok {
+			return nil, "", &llm.ProviderError{
+				StatusCode: 400,
+				Message:    fmt.Sprintf("model must be in provider/model format, got %q", modelSpec),
+				Type:       "invalid_request_error",
+				Code:       "invalid_model_format",
+			}
+		}
+
+		if i == 0 {
+			finalModel = model
+		}
+
+		provider, err := m.getProvider(providerName, apiKey, endpoint, enableRetries)
+		if err != nil {
+			logger.Log.Warn().
+				Str("model_spec", modelSpec).
+				Err(err).
+				Msg("Failed to create provider for fallback")
+			continue
+		}
+
+		providersWithConfig = append(providersWithConfig, failover.ProviderWithConfig{
+			Provider:      provider,
+			EnableRetries: enableRetries,
+		})
+	}
+
+	if len(providersWithConfig) == 0 {
 		return nil, "", &llm.ProviderError{
 			StatusCode: 400,
-			Message:    fmt.Sprintf("model must be in provider/model format, got %q", qualifiedModel),
+			Message:    "no valid fallback providers available",
 			Type:       "invalid_request_error",
-			Code:       "invalid_model_format",
+			Code:       "no_providers",
 		}
 	}
 
-	provider, err := m.getProvider(providerName, apiKey, endpoint)
-	if err != nil {
-		return nil, "", err
-	}
-
-	return provider, model, nil
+	failoverProvider := failover.NewFailoverProvider(providersWithConfig)
+	return failoverProvider, finalModel, nil
 }
 
-func (m *ProviderManager) getProvider(name string, apiKey string, endpoint string) (llm.Provider, error) {
-	cacheKey := fmt.Sprintf("%s:%s:%s", name, apiKey, endpoint)
+func (m *ProviderManager) getProvider(name string, apiKey string, endpoint string, enableRetry bool) (llm.Provider, error) {
+	cacheKey := fmt.Sprintf("%s:%s:%s:%v", name, apiKey, endpoint, enableRetry)
 
 	m.mu.RLock()
 	if provider, exists := m.providers[cacheKey]; exists {
@@ -76,10 +138,10 @@ func (m *ProviderManager) getProvider(name string, apiKey string, endpoint strin
 		return provider, nil
 	}
 
-	var provider llm.Provider
+	var baseProvider llm.Provider
 	switch name {
 	case "openai":
-		provider = openai.New(apiKey)
+		baseProvider = openai.New(apiKey)
 	case "azure":
 		if endpoint == "" {
 			return nil, &llm.ProviderError{
@@ -89,11 +151,11 @@ func (m *ProviderManager) getProvider(name string, apiKey string, endpoint strin
 				Code:       "missing_endpoint",
 			}
 		}
-		provider = azure.New(apiKey, endpoint)
+		baseProvider = azure.New(apiKey, endpoint)
 	case "xai":
-		provider = xai.New(apiKey)
+		baseProvider = xai.New(apiKey)
 	case "zai":
-		provider = zai.New(apiKey)
+		baseProvider = zai.New(apiKey)
 	default:
 		return nil, &llm.ProviderError{
 			StatusCode: 400,
@@ -103,13 +165,17 @@ func (m *ProviderManager) getProvider(name string, apiKey string, endpoint strin
 		}
 	}
 
-	wrappedProvider := m.cbManager.WrapProvider(provider)
-	wrappedProvider = retry.NewRetryableProvider(wrappedProvider, retry.Config{
-		MaxRetries:   3,
-		InitialDelay: 500 * time.Millisecond,
-		MaxDelay:     10 * time.Second,
-		Multiplier:   2.0,
-	})
+	wrappedProvider := m.cbManager.WrapProvider(baseProvider)
+
+	if enableRetry {
+		wrappedProvider = retry.NewRetryableProvider(wrappedProvider, retry.Config{
+			MaxRetries:   3,
+			InitialDelay: 500 * time.Millisecond,
+			MaxDelay:     10 * time.Second,
+			Multiplier:   2.0,
+		})
+	}
+
 	m.providers[cacheKey] = wrappedProvider
 
 	return wrappedProvider, nil
@@ -119,9 +185,6 @@ func (m *ProviderManager) GetCircuitBreakerState(name string) string {
 	return m.cbManager.GetState(name)
 }
 
-// Get parses a qualified model name ("provider/model") and returns the
-// matching provider plus the bare model name to send upstream.
-// Uses the default global ProviderManager with circuit breaker.
 func Get(qualifiedModel string, apiKey string, endpoint string) (llm.Provider, string, error) {
 	return GetProviderManager().Get(qualifiedModel, apiKey, endpoint)
 }
