@@ -95,18 +95,18 @@ type ToolResolution struct {
 }
 
 type StreamOptions struct {
-	IncludeUsage        *bool `json:"include_usage,omitempty"`
+	IncludeUsage       *bool `json:"include_usage,omitempty"`
 	IncludeAccumulated *bool `json:"include_accumulated,omitempty"` // Include accumulated content in each chunk
 }
 
 // ProviderError represents an error from a provider with details
 type ProviderError struct {
-	StatusCode int                    `json:"statusCode"`
-	Message    string                 `json:"message"`
-	Type       string                 `json:"type,omitempty"`
-	Code       string                 `json:"code,omitempty"`
-	Param      string                 `json:"param,omitempty"`
-	Raw        json.RawMessage        `json:"raw,omitempty"` // Raw error response from provider
+	StatusCode int             `json:"statusCode"`
+	Message    string          `json:"message"`
+	Type       string          `json:"type,omitempty"`
+	Code       string          `json:"code,omitempty"`
+	Param      string          `json:"param,omitempty"`
+	Raw        json.RawMessage `json:"raw,omitempty"` // Raw error response from provider
 }
 
 func (e *ProviderError) Error() string {

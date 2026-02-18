@@ -35,7 +35,7 @@ type Provider interface {
 	Name() string
 
 	Chat(ctx context.Context, req ChatRequest) (*ChatResponse, error)
-	
+
 	// ChatStream streams chat responses. The callback function is called for each chunk.
 	// If the callback returns an error, streaming is stopped and that error is returned.
 	ChatStream(ctx context.Context, req ChatRequest, callback func(*StreamChunk) error) error
