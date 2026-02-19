@@ -55,6 +55,7 @@ type GenerateContentResponse struct {
 	Candidates    []Candidate    `json:"candidates"`
 	UsageMetadata *UsageMetadata `json:"usageMetadata,omitempty"`
 	ModelVersion  string         `json:"modelVersion,omitempty"`
+	ResponseId    string         `json:"responseId,omitempty"`
 }
 
 type ErrorResponse struct {

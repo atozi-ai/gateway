@@ -77,9 +77,14 @@ func toChatResponse(resp GenerateContentResponse, model string) *llm.ChatRespons
 		}
 	}
 
+	id := resp.ResponseId
+	if id == "" {
+		id = "gemini-" + model
+	}
+
 	return &llm.ChatResponse{
-		ID:      resp.ModelVersion,
-		Model:   model,
+		ID:      id,
+		Model:   "gemini/" + model,
 		Content: content,
 	}
 }
