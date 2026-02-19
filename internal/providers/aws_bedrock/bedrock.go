@@ -45,10 +45,10 @@ func New(accessKey, secretKey, region string) *Provider {
 func (p *Provider) Name() string { return "bedrock" }
 
 func (p *Provider) Chat(ctx context.Context, req llm.ChatRequest) (*llm.ChatResponse, error) {
-	// Get credentials from request options, fallback to stored defaults
 	accessKey := p.awsAccessKey
 	secretKey := p.awsSecretKey
 	region := p.awsRegion
+	inferenceProfileARN := ""
 
 	if req.Options.AWSAccessKeyID != nil && *req.Options.AWSAccessKeyID != "" {
 		accessKey = *req.Options.AWSAccessKeyID
@@ -59,13 +59,31 @@ func (p *Provider) Chat(ctx context.Context, req llm.ChatRequest) (*llm.ChatResp
 	if req.Options.AWSRegion != nil && *req.Options.AWSRegion != "" {
 		region = *req.Options.AWSRegion
 	}
+	if req.Options.AWSInferenceProfileARN != nil && *req.Options.AWSInferenceProfileARN != "" {
+		inferenceProfileARN = *req.Options.AWSInferenceProfileARN
+		if region == "" {
+			parts := strings.Split(inferenceProfileARN, ":")
+			if len(parts) >= 4 {
+				region = parts[3]
+			}
+		}
+	}
 
 	if accessKey == "" || secretKey == "" {
 		return nil, &llm.ProviderError{
 			StatusCode: 400,
-			Message:    "AWS credentials required. Provide aws_access_key_id, aws_secret_access_key, and aws_region in request options",
+			Message:    "AWS credentials required. Provide aws_access_key_id and aws_secret_access_key in request options",
 			Type:       "invalid_request_error",
 			Code:       "missing_aws_credentials",
+		}
+	}
+
+	if region == "" {
+		return nil, &llm.ProviderError{
+			StatusCode: 400,
+			Message:    "AWS region required. Provide aws_region in request options or use aws_inference_profile_arn which includes region info",
+			Type:       "invalid_request_error",
+			Code:       "missing_aws_region",
 		}
 	}
 
@@ -77,7 +95,12 @@ func (p *Provider) Chat(ctx context.Context, req llm.ChatRequest) (*llm.ChatResp
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	url := fmt.Sprintf("https://bedrock-runtime.%s.amazonaws.com/model/%s/converse", region, req.Model)
+	modelPath := req.Model
+	if inferenceProfileARN != "" {
+		modelPath = inferenceProfileARN
+	}
+
+	url := fmt.Sprintf("https://bedrock-runtime.%s.amazonaws.com/model/%s/converse", region, modelPath)
 
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(body))
 	if err != nil {
@@ -115,6 +138,7 @@ func (p *Provider) ChatStream(ctx context.Context, req llm.ChatRequest, callback
 	accessKey := p.awsAccessKey
 	secretKey := p.awsSecretKey
 	region := p.awsRegion
+	inferenceProfileARN := ""
 
 	if req.Options.AWSAccessKeyID != nil && *req.Options.AWSAccessKeyID != "" {
 		accessKey = *req.Options.AWSAccessKeyID
@@ -125,13 +149,31 @@ func (p *Provider) ChatStream(ctx context.Context, req llm.ChatRequest, callback
 	if req.Options.AWSRegion != nil && *req.Options.AWSRegion != "" {
 		region = *req.Options.AWSRegion
 	}
+	if req.Options.AWSInferenceProfileARN != nil && *req.Options.AWSInferenceProfileARN != "" {
+		inferenceProfileARN = *req.Options.AWSInferenceProfileARN
+		if region == "" {
+			parts := strings.Split(inferenceProfileARN, ":")
+			if len(parts) >= 4 {
+				region = parts[3]
+			}
+		}
+	}
 
 	if accessKey == "" || secretKey == "" {
 		return &llm.ProviderError{
 			StatusCode: 400,
-			Message:    "AWS credentials required. Provide aws_access_key_id, aws_secret_access_key, and aws_region in request options",
+			Message:    "AWS credentials required. Provide aws_access_key_id and aws_secret_access_key in request options",
 			Type:       "invalid_request_error",
 			Code:       "missing_aws_credentials",
+		}
+	}
+
+	if region == "" {
+		return &llm.ProviderError{
+			StatusCode: 400,
+			Message:    "AWS region required. Provide aws_region in request options or use aws_inference_profile_arn which includes region info",
+			Type:       "invalid_request_error",
+			Code:       "missing_aws_region",
 		}
 	}
 
@@ -143,7 +185,12 @@ func (p *Provider) ChatStream(ctx context.Context, req llm.ChatRequest, callback
 		return fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	url := fmt.Sprintf("https://bedrock-runtime.%s.amazonaws.com/model/%s/converse-stream", region, req.Model)
+	modelPath := req.Model
+	if inferenceProfileARN != "" {
+		modelPath = inferenceProfileARN
+	}
+
+	url := fmt.Sprintf("https://bedrock-runtime.%s.amazonaws.com/model/%s/converse-stream", region, modelPath)
 
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(body))
 	if err != nil {
