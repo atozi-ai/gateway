@@ -96,6 +96,13 @@ func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 		{ID: "anthropic/claude-haiku-4-5", Object: "model", OwnedBy: "anthropic", Provider: "anthropic", Name: "Claude Haiku 4.5", ContextLen: 200000, Description: "Fast efficient model", Category: []string{"general"}},
 		{ID: "anthropic/claude-haiku-3-5", Object: "model", OwnedBy: "anthropic", Provider: "anthropic", Name: "Claude Haiku 3.5", ContextLen: 200000, Description: "Very fast model", Category: []string{"general"}},
 
+		// Google Vertex AI Models - Latest 2025-2026
+		{ID: "vertex/gemini-2.5-pro", Object: "model", OwnedBy: "google", Provider: "vertex", Name: "Gemini 2.5 Pro (Vertex)", ContextLen: 1000000, Description: "Google's flagship multimodal model on Vertex", Category: []string{"general", "vision", "multimodal"}, IsFlagship: true},
+		{ID: "vertex/gemini-2.5-flash", Object: "model", OwnedBy: "google", Provider: "vertex", Name: "Gemini 2.5 Flash (Vertex)", ContextLen: 1000000, Description: "Fast multimodal model on Vertex", Category: []string{"general", "vision"}, IsFlagship: true},
+		{ID: "vertex/gemini-2.0-pro", Object: "model", OwnedBy: "google", Provider: "vertex", Name: "Gemini 2.0 Pro (Vertex)", ContextLen: 2000000, Description: "High-capability Gemini 2.0 on Vertex", Category: []string{"general", "vision"}},
+		{ID: "vertex/gemini-2.0-flash", Object: "model", OwnedBy: "google", Provider: "vertex", Name: "Gemini 2.0 Flash (Vertex)", ContextLen: 1000000, Description: "Fast Gemini 2.0 on Vertex", Category: []string{"general", "vision"}},
+		{ID: "vertex/gemini-1.5-pro", Object: "model", OwnedBy: "google", Provider: "vertex", Name: "Gemini 1.5 Pro (Vertex)", ContextLen: 2000000, Description: "High-capability multimodal on Vertex", Category: []string{"general", "vision", "multimodal"}},
+
 		// Google Gemini Models - Latest 2025-2026
 		{ID: "gemini/gemini-3-pro-preview", Object: "model", OwnedBy: "google", Provider: "gemini", Name: "Gemini 3 Pro Preview", ContextLen: 1048576, Description: "Next-gen Gemini flagship", Category: []string{"general", "vision", "multimodal"}, IsFlagship: true},
 		{ID: "gemini/gemini-3-flash-preview", Object: "model", OwnedBy: "google", Provider: "gemini", Name: "Gemini 3 Flash Preview", ContextLen: 1048576, Description: "Fast next-gen model", Category: []string{"general", "vision"}},
