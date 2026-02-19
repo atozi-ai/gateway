@@ -51,6 +51,7 @@ func Start() {
 		RequestsPerHour:   getEnvInt("RATE_LIMIT_REQUESTS_PER_HOUR", 0),
 		RequestsPerDay:    getEnvInt("RATE_LIMIT_REQUESTS_PER_DAY", 0),
 		Burst:             getEnvInt("RATE_LIMIT_BURST", 20),
+		MaxClients:        getEnvInt("RATE_LIMIT_MAX_CLIENTS", 10000),
 	}
 
 	rateLimiter := ratelimit.NewRateLimiter(rateLimitConfig)
@@ -60,6 +61,7 @@ func Start() {
 		Int("requests_per_hour", rateLimitConfig.RequestsPerHour).
 		Int("requests_per_day", rateLimitConfig.RequestsPerDay).
 		Int("burst", rateLimitConfig.Burst).
+		Int("max_clients", rateLimitConfig.MaxClients).
 		Msg("Rate limiting enabled")
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
