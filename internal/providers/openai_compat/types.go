@@ -144,12 +144,14 @@ type errorResponse struct {
 // --- Streaming types ---
 
 type streamChunk struct {
-	ID      string         `json:"id"`
-	Object  string         `json:"object"`
-	Created int64          `json:"created"`
-	Model   string         `json:"model"`
-	Choices []streamChoice `json:"choices"`
-	Usage   *streamUsage   `json:"usage,omitempty"`
+	ID                string         `json:"id"`
+	Object            string         `json:"object"`
+	Created           int64          `json:"created"`
+	Model             string         `json:"model"`
+	Choices           []streamChoice `json:"choices"`
+	Usage             *streamUsage   `json:"usage,omitempty"`
+	SystemFingerprint *string        `json:"system_fingerprint,omitempty"`
+	ServiceTier       *string        `json:"service_tier,omitempty"`
 }
 
 type streamChoice struct {
