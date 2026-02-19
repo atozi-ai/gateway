@@ -149,6 +149,12 @@ func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 		{ID: "fireworks/mistral-large-3", Object: "model", OwnedBy: "mistral", Provider: "fireworks", Name: "Mistral Large 3", ContextLen: 131072},
 		{ID: "fireworks/mixtral-8x22b-instruct", Object: "model", OwnedBy: "mistral", Provider: "fireworks", Name: "Mixtral 8x22B", ContextLen: 65536},
 		{ID: "fireworks/gemma-2-9b-it", Object: "model", OwnedBy: "google", Provider: "fireworks", Name: "Gemma 2 9B", ContextLen: 8192},
+
+		// Perplexity AI Models - Latest 2025-2026
+		{ID: "perplexity/sonar", Object: "model", OwnedBy: "perplexity", Provider: "perplexity", Name: "Sonar", ContextLen: 128000},
+		{ID: "perplexity/sonar-pro", Object: "model", OwnedBy: "perplexity", Provider: "perplexity", Name: "Sonar Pro", ContextLen: 200000},
+		{ID: "perplexity/sonar-reasoning", Object: "model", OwnedBy: "perplexity", Provider: "perplexity", Name: "Sonar Reasoning", ContextLen: 128000},
+		{ID: "perplexity/sonar-reasoning-pro", Object: "model", OwnedBy: "perplexity", Provider: "perplexity", Name: "Sonar Reasoning Pro", ContextLen: 128000},
 	}
 
 	response := ModelsListResponse{
