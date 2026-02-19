@@ -174,6 +174,13 @@ func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 		{ID: "novita/qwen-2.5-coder-32b-instruct", Object: "model", OwnedBy: "qwen", Provider: "novita", Name: "Qwen 2.5 Coder 32B Instruct", ContextLen: 131072},
 		{ID: "novita/mistral-nemo-instruct", Object: "model", OwnedBy: "mistral", Provider: "novita", Name: "Mistral Nemo Instruct", ContextLen: 128000},
 		{ID: "novita/gemma-2-9b-it", Object: "model", OwnedBy: "google", Provider: "novita", Name: "Gemma 2 9B Instruct", ContextLen: 8192},
+
+		// Hyperbolic Models - Latest 2025-2026
+		{ID: "hyperbolic/deepseek-v3", Object: "model", OwnedBy: "deepseek", Provider: "hyperbolic", Name: "DeepSeek V3", ContextLen: 131072},
+		{ID: "hyperbolic/deepseek-r1", Object: "model", OwnedBy: "deepseek", Provider: "hyperbolic", Name: "DeepSeek R1", ContextLen: 131072},
+		{ID: "hyperbolic/qwen-2.5-72b-instruct", Object: "model", OwnedBy: "qwen", Provider: "hyperbolic", Name: "Qwen 2.5 72B Instruct", ContextLen: 131072},
+		{ID: "hyperbolic/llama-3.1-405b-base", Object: "model", OwnedBy: "meta", Provider: "hyperbolic", Name: "Llama 3.1 405B Base", ContextLen: 131072},
+		{ID: "hyperbolic/gpt-oss-120b", Object: "model", OwnedBy: "openai", Provider: "hyperbolic", Name: "GPT-OSS 120B", ContextLen: 131069},
 	}
 
 	response := ModelsListResponse{
