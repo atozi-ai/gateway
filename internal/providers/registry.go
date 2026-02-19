@@ -20,6 +20,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/providers/groq"
 	"github.com/atozi-ai/gateway/internal/providers/hyperbolic"
 	"github.com/atozi-ai/gateway/internal/providers/mistral"
+	"github.com/atozi-ai/gateway/internal/providers/moonshot"
 	"github.com/atozi-ai/gateway/internal/providers/novita"
 	"github.com/atozi-ai/gateway/internal/providers/openai"
 	"github.com/atozi-ai/gateway/internal/providers/perplexity"
@@ -180,6 +181,8 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 		baseProvider = deepseek.New()
 	case "mistral":
 		baseProvider = mistral.New()
+	case "moonshot":
+		baseProvider = moonshot.New()
 	case "together":
 		baseProvider = together.New()
 	case "upstage":
