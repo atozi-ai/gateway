@@ -93,6 +93,20 @@ func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 		// DeepSeek Models - 2025
 		{ID: "deepseek/deepseek-chat", Object: "model", OwnedBy: "deepseek", Provider: "deepseek", Name: "DeepSeek V3 Chat", ContextLen: 128000},
 		{ID: "deepseek/deepseek-reasoner", Object: "model", OwnedBy: "deepseek", Provider: "deepseek", Name: "DeepSeek R1 Reasoner", ContextLen: 128000},
+
+		// Mistral AI Models - Latest 2025-2026
+		{ID: "mistral/mistral-large-3", Object: "model", OwnedBy: "mistral", Provider: "mistral", Name: "Mistral Large 3", ContextLen: 256000},
+		{ID: "mistral/mistral-medium-3-1", Object: "model", OwnedBy: "mistral", Provider: "mistral", Name: "Mistral Medium 3.1", ContextLen: 128000},
+		{ID: "mistral/mistral-small-3-2", Object: "model", OwnedBy: "mistral", Provider: "mistral", Name: "Mistral Small 3.2", ContextLen: 32000},
+		{ID: "mistral/devstral-2", Object: "model", OwnedBy: "mistral", Provider: "mistral", Name: "Devstral 2", ContextLen: 128000},
+		{ID: "mistral/magistral-1-2", Object: "model", OwnedBy: "mistral", Provider: "mistral", Name: "Magistral 1.2", ContextLen: 128000},
+		{ID: "mistral/codestral-2508", Object: "model", OwnedBy: "mistral", Provider: "mistral", Name: "Codestral 25.08", ContextLen: 128000},
+		{ID: "mistral/ministral-14b", Object: "model", OwnedBy: "mistral", Provider: "mistral", Name: "Ministral 14B", ContextLen: 128000},
+		{ID: "mistral/ministral-8b", Object: "model", OwnedBy: "mistral", Provider: "mistral", Name: "Ministral 8B", ContextLen: 128000},
+		{ID: "mistral/ministral-3b", Object: "model", OwnedBy: "mistral", Provider: "mistral", Name: "Ministral 3B", ContextLen: 128000},
+		{ID: "mistral/pixtral-large", Object: "model", OwnedBy: "mistral", Provider: "mistral", Name: "Pixtral Large", ContextLen: 128000},
+		{ID: "mistral/voxtral", Object: "model", OwnedBy: "mistral", Provider: "mistral", Name: "Voxtral", ContextLen: 128000},
+		{ID: "mistral/nemo", Object: "model", OwnedBy: "mistral", Provider: "mistral", Name: "Nemo", ContextLen: 128000},
 	}
 
 	response := ModelsListResponse{
