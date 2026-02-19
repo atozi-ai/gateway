@@ -195,6 +195,12 @@ func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 		{ID: "moonshot/kimi-v1-8k", Object: "model", OwnedBy: "moonshot", Provider: "moonshot", Name: "Kimi v1 8K", ContextLen: 8192},
 		{ID: "moonshot/kimi-v1-32k", Object: "model", OwnedBy: "moonshot", Provider: "moonshot", Name: "Kimi v1 32K", ContextLen: 32768},
 		{ID: "moonshot/kimi-v1-128k", Object: "model", OwnedBy: "moonshot", Provider: "moonshot", Name: "Kimi v1 128K", ContextLen: 131072},
+
+		// MiniMax Models - Latest 2025-2026
+		{ID: "minimax/abab6.5", Object: "model", OwnedBy: "minimax", Provider: "minimax", Name: "abab 6.5", ContextLen: 200000},
+		{ID: "minimax/abab6.5s", Object: "model", OwnedBy: "minimax", Provider: "minimax", Name: "abab 6.5s", ContextLen: 200000},
+		{ID: "minimax/m2.5", Object: "model", OwnedBy: "minimax", Provider: "minimax", Name: "MiniMax M2.5", ContextLen: 204800},
+		{ID: "minimax/m2.1", Object: "model", OwnedBy: "minimax", Provider: "minimax", Name: "MiniMax M2.1", ContextLen: 204800},
 	}
 
 	response := ModelsListResponse{
