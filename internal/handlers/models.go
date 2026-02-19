@@ -181,6 +181,12 @@ func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 		{ID: "hyperbolic/qwen-2.5-72b-instruct", Object: "model", OwnedBy: "qwen", Provider: "hyperbolic", Name: "Qwen 2.5 72B Instruct", ContextLen: 131072},
 		{ID: "hyperbolic/llama-3.1-405b-base", Object: "model", OwnedBy: "meta", Provider: "hyperbolic", Name: "Llama 3.1 405B Base", ContextLen: 131072},
 		{ID: "hyperbolic/gpt-oss-120b", Object: "model", OwnedBy: "openai", Provider: "hyperbolic", Name: "GPT-OSS 120B", ContextLen: 131069},
+
+		// Upstage Models - Latest 2025-2026
+		{ID: "upstage/solar-pro-3", Object: "model", OwnedBy: "upstage", Provider: "upstage", Name: "Solar Pro 3", ContextLen: 128000},
+		{ID: "upstage/solar-pro-2", Object: "model", OwnedBy: "upstage", Provider: "upstage", Name: "Solar Pro 2", ContextLen: 128000},
+		{ID: "upstage/solar-mini", Object: "model", OwnedBy: "upstage", Provider: "upstage", Name: "Solar Mini", ContextLen: 128000},
+		{ID: "upstage/solar-open", Object: "model", OwnedBy: "upstage", Provider: "upstage", Name: "Solar Open", ContextLen: 128000},
 	}
 
 	response := ModelsListResponse{

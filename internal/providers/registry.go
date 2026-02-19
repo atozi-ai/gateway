@@ -24,6 +24,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/providers/openai"
 	"github.com/atozi-ai/gateway/internal/providers/perplexity"
 	"github.com/atozi-ai/gateway/internal/providers/together"
+	"github.com/atozi-ai/gateway/internal/providers/upstage"
 	"github.com/atozi-ai/gateway/internal/providers/xai"
 	"github.com/atozi-ai/gateway/internal/providers/zai"
 	"github.com/atozi-ai/gateway/internal/retry"
@@ -181,6 +182,8 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 		baseProvider = mistral.New()
 	case "together":
 		baseProvider = together.New()
+	case "upstage":
+		baseProvider = upstage.New()
 	case "fireworks":
 		baseProvider = fireworks.New()
 	case "perplexity":
