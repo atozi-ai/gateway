@@ -219,6 +219,12 @@ func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 		{ID: "replicate/gpt-5", Object: "model", OwnedBy: "openai", Provider: "replicate", Name: "GPT-5", ContextLen: 256000},
 		{ID: "replicate/gemini-3-pro", Object: "model", OwnedBy: "google", Provider: "replicate", Name: "Gemini 3 Pro", ContextLen: 1048576},
 		{ID: "replicate/claude-4.5-sonnet", Object: "model", OwnedBy: "anthropic", Provider: "replicate", Name: "Claude 4.5 Sonnet", ContextLen: 200000},
+
+		// Anyscale Models - Latest 2025-2026
+		{ID: "anyscale/llama-3.3-70b-instruct", Object: "model", OwnedBy: "meta", Provider: "anyscale", Name: "Llama 3.3 70B Instruct", ContextLen: 131072},
+		{ID: "anyscale/llama-3.1-8b-instruct", Object: "model", OwnedBy: "meta", Provider: "anyscale", Name: "Llama 3.1 8B Instruct", ContextLen: 131072},
+		{ID: "anyscale/llama-4-maverick", Object: "model", OwnedBy: "meta", Provider: "anyscale", Name: "Llama 4 Maverick", ContextLen: 131072},
+		{ID: "anyscale/mistral-7b-instruct", Object: "model", OwnedBy: "mistral", Provider: "anyscale", Name: "Mistral 7B Instruct", ContextLen: 32768},
 	}
 
 	response := ModelsListResponse{
