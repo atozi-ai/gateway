@@ -13,6 +13,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/platform/logger"
 	"github.com/atozi-ai/gateway/internal/providers/anthropic"
 	"github.com/atozi-ai/gateway/internal/providers/azure"
+	"github.com/atozi-ai/gateway/internal/providers/cohere"
 	"github.com/atozi-ai/gateway/internal/providers/deepseek"
 	"github.com/atozi-ai/gateway/internal/providers/fireworks"
 	"github.com/atozi-ai/gateway/internal/providers/gemini"
@@ -180,6 +181,8 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 		baseProvider = fireworks.New()
 	case "perplexity":
 		baseProvider = perplexity.New()
+	case "cohere":
+		baseProvider = cohere.New()
 	default:
 		return nil, &llm.ProviderError{
 			StatusCode: 400,

@@ -155,6 +155,15 @@ func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 		{ID: "perplexity/sonar-pro", Object: "model", OwnedBy: "perplexity", Provider: "perplexity", Name: "Sonar Pro", ContextLen: 200000},
 		{ID: "perplexity/sonar-reasoning", Object: "model", OwnedBy: "perplexity", Provider: "perplexity", Name: "Sonar Reasoning", ContextLen: 128000},
 		{ID: "perplexity/sonar-reasoning-pro", Object: "model", OwnedBy: "perplexity", Provider: "perplexity", Name: "Sonar Reasoning Pro", ContextLen: 128000},
+
+		// Cohere Models - Latest 2025-2026
+		{ID: "cohere/command-a", Object: "model", OwnedBy: "cohere", Provider: "cohere", Name: "Command A", ContextLen: 256000},
+		{ID: "cohere/command-r-plus", Object: "model", OwnedBy: "cohere", Provider: "cohere", Name: "Command R+", ContextLen: 128000},
+		{ID: "cohere/command-r", Object: "model", OwnedBy: "cohere", Provider: "cohere", Name: "Command R", ContextLen: 128000},
+		{ID: "cohere/command-light", Object: "model", OwnedBy: "cohere", Provider: "cohere", Name: "Command Light", ContextLen: 4096},
+		{ID: "cohere/embed-english-v3", Object: "model", OwnedBy: "cohere", Provider: "cohere", Name: "Embed English v3", ContextLen: 512},
+		{ID: "cohere/embed-multilingual-v3", Object: "model", OwnedBy: "cohere", Provider: "cohere", Name: "Embed Multilingual v3", ContextLen: 512},
+		{ID: "cohere/rerank-v3.5", Object: "model", OwnedBy: "cohere", Provider: "cohere", Name: "Rerank v3.5", ContextLen: 512},
 	}
 
 	response := ModelsListResponse{
