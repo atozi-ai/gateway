@@ -32,6 +32,20 @@ func NewModelsHandler() *ModelsHandler {
 
 func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 	models := []ModelInfo{
+		// AWS Bedrock Models - Latest 2025-2026
+		{ID: "bedrock/anthropic.claude-3-opus-20240229", Object: "model", OwnedBy: "anthropic", Provider: "bedrock", Name: "Claude 3 Opus", ContextLen: 200000, Description: "Anthropic's most capable model", Category: []string{"general", "reasoning", "coding"}, IsFlagship: true},
+		{ID: "bedrock/anthropic.claude-3-sonnet-20240229", Object: "model", OwnedBy: "anthropic", Provider: "bedrock", Name: "Claude 3 Sonnet", ContextLen: 200000, Description: "Balanced performance model", Category: []string{"general", "coding"}},
+		{ID: "bedrock/anthropic.claude-3-haiku-20240307", Object: "model", OwnedBy: "anthropic", Provider: "bedrock", Name: "Claude 3 Haiku", ContextLen: 200000, Description: "Fast efficient model", Category: []string{"general"}},
+		{ID: "bedrock/anthropic.claude-sonnet-4-20250514", Object: "model", OwnedBy: "anthropic", Provider: "bedrock", Name: "Claude Sonnet 4", ContextLen: 200000, Description: "Latest balanced model", Category: []string{"general", "coding"}, IsFlagship: true},
+		{ID: "bedrock/meta.llama3-3-70b-instruct", Object: "model", OwnedBy: "meta", Provider: "bedrock", Name: "Llama 3.3 70B Instruct", ContextLen: 131072, Description: "Meta's latest open model", Category: []string{"general"}, IsFlagship: true},
+		{ID: "bedrock/meta.llama3-1-405b-instruct", Object: "model", OwnedBy: "meta", Provider: "bedrock", Name: "Llama 3.1 405B Instruct", ContextLen: 131072, Description: "Large Meta model", Category: []string{"general"}},
+		{ID: "bedrock/meta.llama3-1-70b-instruct", Object: "model", OwnedBy: "meta", Provider: "bedrock", Name: "Llama 3.1 70B Instruct", ContextLen: 131072, Description: "Mid-size Meta model", Category: []string{"general"}},
+		{ID: "bedrock/meta.llama3-1-8b-instruct", Object: "model", OwnedBy: "meta", Provider: "bedrock", Name: "Llama 3.1 8B Instruct", ContextLen: 131072, Description: "Efficient Meta model", Category: []string{"general"}},
+		{ID: "bedrock/mistral.mistral-large-2407", Object: "model", OwnedBy: "mistral", Provider: "bedrock", Name: "Mistral Large", ContextLen: 128000, Description: "Mistral's flagship model", Category: []string{"general"}, IsFlagship: true},
+		{ID: "bedrock/mistral.mixtral-8x7b-instruct", Object: "model", OwnedBy: "mistral", Provider: "bedrock", Name: "Mixtral 8x7B", ContextLen: 32000, Description: "Efficient MoE model", Category: []string{"general"}},
+		{ID: "bedrock/amazon.titan-text-express", Object: "model", OwnedBy: "amazon", Provider: "bedrock", Name: "Titan Text Express", ContextLen: 8192, Description: "Amazon's Titan model", Category: []string{"general"}},
+		{ID: "bedrock/ai21.jamba-1-5-large", Object: "model", OwnedBy: "ai21", Provider: "bedrock", Name: "Jamba 1.5 Large", ContextLen: 256000, Description: "AI21's Jamba model", Category: []string{"general"}, IsFlagship: true},
+
 		// OpenAI Models - Latest 2025-2026
 		{ID: "openai/gpt-5.2", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "GPT-5.2", ContextLen: 256000, Description: "OpenAI's latest flagship model", Category: []string{"general", "coding", "reasoning"}, IsFlagship: true},
 		{ID: "openai/gpt-4.5", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "GPT-4.5", ContextLen: 128000, Description: "OpenAI's previous flagship model", Category: []string{"general", "coding"}},
