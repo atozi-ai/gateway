@@ -211,6 +211,14 @@ func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 		{ID: "siliconflow/deepseek-r1-distill-qwen-14b", Object: "model", OwnedBy: "deepseek", Provider: "siliconflow", Name: "DeepSeek R1 Distill Qwen 14B", ContextLen: 131072},
 		{ID: "siliconflow/llama-3.1-8b-instruct", Object: "model", OwnedBy: "meta", Provider: "siliconflow", Name: "Llama 3.1 8B Instruct", ContextLen: 131072},
 		{ID: "siliconflow/glm-4-9b-chat", Object: "model", OwnedBy: "zhipu", Provider: "siliconflow", Name: "GLM 4 9B Chat", ContextLen: 131072},
+
+		// Replicate Models - Latest 2025-2026
+		{ID: "replicate/llama-3.3-70b-instruct", Object: "model", OwnedBy: "meta", Provider: "replicate", Name: "Llama 3.3 70B Instruct", ContextLen: 131072},
+		{ID: "replicate/deepseek-v3", Object: "model", OwnedBy: "deepseek", Provider: "replicate", Name: "DeepSeek V3", ContextLen: 128000},
+		{ID: "replicate/qwen3-32b", Object: "model", OwnedBy: "qwen", Provider: "replicate", Name: "Qwen 3 32B", ContextLen: 131072},
+		{ID: "replicate/gpt-5", Object: "model", OwnedBy: "openai", Provider: "replicate", Name: "GPT-5", ContextLen: 256000},
+		{ID: "replicate/gemini-3-pro", Object: "model", OwnedBy: "google", Provider: "replicate", Name: "Gemini 3 Pro", ContextLen: 1048576},
+		{ID: "replicate/claude-4.5-sonnet", Object: "model", OwnedBy: "anthropic", Provider: "replicate", Name: "Claude 4.5 Sonnet", ContextLen: 200000},
 	}
 
 	response := ModelsListResponse{
