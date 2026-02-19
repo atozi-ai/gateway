@@ -142,7 +142,7 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 	var baseProvider llm.Provider
 	switch name {
 	case "openai":
-		baseProvider = openai.New("")
+		baseProvider = openai.New()
 	case "azure":
 		if endpoint == "" {
 			return nil, &llm.ProviderError{
@@ -154,11 +154,11 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 		}
 		baseProvider = azure.New("", endpoint)
 	case "xai":
-		baseProvider = xai.New("")
+		baseProvider = xai.New()
 	case "zai":
-		baseProvider = zai.New("")
+		baseProvider = zai.New()
 	case "anthropic":
-		baseProvider = anthropic.New("")
+		baseProvider = anthropic.New()
 	default:
 		return nil, &llm.ProviderError{
 			StatusCode: 400,
