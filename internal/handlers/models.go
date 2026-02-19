@@ -195,6 +195,11 @@ func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 		{ID: "deepinfra/glm-5", Object: "model", OwnedBy: "z-ai", Provider: "deepinfra", Name: "GLM 5", ContextLen: 131072},
 		{ID: "deepinfra/mistral-large", Object: "model", OwnedBy: "mistral", Provider: "deepinfra", Name: "Mistral Large", ContextLen: 131072},
 
+		// SambaNova Models - Latest 2025-2026
+		{ID: "sambanova/llama-3.3-70b", Object: "model", OwnedBy: "meta", Provider: "sambanova", Name: "Llama 3.3 70B", ContextLen: 131072},
+		{ID: "sambanova/llama-3.2-90b-vision", Object: "model", OwnedBy: "meta", Provider: "sambanova", Name: "Llama 3.2 90B Vision", ContextLen: 131072},
+		{ID: "sambanova/qwen2.5-72b", Object: "model", OwnedBy: "qwen", Provider: "sambanova", Name: "Qwen 2.5 72B", ContextLen: 131072},
+
 		// Hyperbolic Models - Latest 2025-2026
 		{ID: "hyperbolic/deepseek-v3", Object: "model", OwnedBy: "deepseek", Provider: "hyperbolic", Name: "DeepSeek V3", ContextLen: 131072},
 		{ID: "hyperbolic/deepseek-r1", Object: "model", OwnedBy: "deepseek", Provider: "hyperbolic", Name: "DeepSeek R1", ContextLen: 131072},

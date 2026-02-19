@@ -30,6 +30,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/providers/openai"
 	"github.com/atozi-ai/gateway/internal/providers/perplexity"
 	"github.com/atozi-ai/gateway/internal/providers/replicate"
+	"github.com/atozi-ai/gateway/internal/providers/sambanova"
 	"github.com/atozi-ai/gateway/internal/providers/siliconflow"
 	"github.com/atozi-ai/gateway/internal/providers/together"
 	"github.com/atozi-ai/gateway/internal/providers/upstage"
@@ -208,6 +209,8 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 		baseProvider = perplexity.New()
 	case "replicate":
 		baseProvider = replicate.New()
+	case "sambanova":
+		baseProvider = sambanova.New()
 	case "cohere":
 		baseProvider = cohere.New()
 	case "novita":
