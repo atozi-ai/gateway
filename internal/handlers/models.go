@@ -164,6 +164,16 @@ func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 		{ID: "cohere/embed-english-v3", Object: "model", OwnedBy: "cohere", Provider: "cohere", Name: "Embed English v3", ContextLen: 512},
 		{ID: "cohere/embed-multilingual-v3", Object: "model", OwnedBy: "cohere", Provider: "cohere", Name: "Embed Multilingual v3", ContextLen: 512},
 		{ID: "cohere/rerank-v3.5", Object: "model", OwnedBy: "cohere", Provider: "cohere", Name: "Rerank v3.5", ContextLen: 512},
+
+		// Novita AI Models - Latest 2025-2026
+		{ID: "novita/llama-3.3-70b-instruct", Object: "model", OwnedBy: "meta", Provider: "novita", Name: "Llama 3.3 70B Instruct", ContextLen: 131072},
+		{ID: "novita/deepseek-v3", Object: "model", OwnedBy: "deepseek", Provider: "novita", Name: "DeepSeek V3", ContextLen: 163840},
+		{ID: "novita/deepseek-v3-turbo", Object: "model", OwnedBy: "deepseek", Provider: "novita", Name: "DeepSeek V3 Turbo", ContextLen: 128000},
+		{ID: "novita/deepseek-r1", Object: "model", OwnedBy: "deepseek", Provider: "novita", Name: "DeepSeek R1", ContextLen: 128000},
+		{ID: "novita/qwen-2.5-72b-instruct", Object: "model", OwnedBy: "qwen", Provider: "novita", Name: "Qwen 2.5 72B Instruct", ContextLen: 131072},
+		{ID: "novita/qwen-2.5-coder-32b-instruct", Object: "model", OwnedBy: "qwen", Provider: "novita", Name: "Qwen 2.5 Coder 32B Instruct", ContextLen: 131072},
+		{ID: "novita/mistral-nemo-instruct", Object: "model", OwnedBy: "mistral", Provider: "novita", Name: "Mistral Nemo Instruct", ContextLen: 128000},
+		{ID: "novita/gemma-2-9b-it", Object: "model", OwnedBy: "google", Provider: "novita", Name: "Gemma 2 9B Instruct", ContextLen: 8192},
 	}
 
 	response := ModelsListResponse{

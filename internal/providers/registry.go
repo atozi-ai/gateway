@@ -19,6 +19,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/providers/gemini"
 	"github.com/atozi-ai/gateway/internal/providers/groq"
 	"github.com/atozi-ai/gateway/internal/providers/mistral"
+	"github.com/atozi-ai/gateway/internal/providers/novita"
 	"github.com/atozi-ai/gateway/internal/providers/openai"
 	"github.com/atozi-ai/gateway/internal/providers/perplexity"
 	"github.com/atozi-ai/gateway/internal/providers/together"
@@ -183,6 +184,8 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 		baseProvider = perplexity.New()
 	case "cohere":
 		baseProvider = cohere.New()
+	case "novita":
+		baseProvider = novita.New()
 	default:
 		return nil, &llm.ProviderError{
 			StatusCode: 400,
