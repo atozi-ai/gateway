@@ -187,6 +187,14 @@ func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 		{ID: "ollama/gemma2", Object: "model", OwnedBy: "google", Provider: "ollama", Name: "Gemma 2", ContextLen: 8192},
 		{ID: "ollama/mixtral", Object: "model", OwnedBy: "mistral", Provider: "ollama", Name: "Mixtral 8x7B", ContextLen: 32768},
 
+		// DeepInfra Models - Latest 2025-2026
+		{ID: "deepinfra/llama-3.3-70b-instruct", Object: "model", OwnedBy: "meta", Provider: "deepinfra", Name: "Llama 3.3 70B Instruct", ContextLen: 131072},
+		{ID: "deepinfra/deepseek-v3", Object: "model", OwnedBy: "deepseek", Provider: "deepinfra", Name: "DeepSeek V3", ContextLen: 163840},
+		{ID: "deepinfra/qwen3-max-thinking", Object: "model", OwnedBy: "qwen", Provider: "deepinfra", Name: "Qwen3 Max Thinking", ContextLen: 131072},
+		{ID: "deepinfra/kimi-k2.5", Object: "model", OwnedBy: "moonshot", Provider: "deepinfra", Name: "Kimi K2.5", ContextLen: 262144},
+		{ID: "deepinfra/glm-5", Object: "model", OwnedBy: "z-ai", Provider: "deepinfra", Name: "GLM 5", ContextLen: 131072},
+		{ID: "deepinfra/mistral-large", Object: "model", OwnedBy: "mistral", Provider: "deepinfra", Name: "Mistral Large", ContextLen: 131072},
+
 		// Hyperbolic Models - Latest 2025-2026
 		{ID: "hyperbolic/deepseek-v3", Object: "model", OwnedBy: "deepseek", Provider: "hyperbolic", Name: "DeepSeek V3", ContextLen: 131072},
 		{ID: "hyperbolic/deepseek-r1", Object: "model", OwnedBy: "deepseek", Provider: "hyperbolic", Name: "DeepSeek R1", ContextLen: 131072},
