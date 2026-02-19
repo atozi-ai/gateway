@@ -45,6 +45,30 @@ func New(accessKey, secretKey, region string) *Provider {
 func (p *Provider) Name() string { return "bedrock" }
 
 func (p *Provider) Chat(ctx context.Context, req llm.ChatRequest) (*llm.ChatResponse, error) {
+	// Get credentials from request options, fallback to stored defaults
+	accessKey := p.awsAccessKey
+	secretKey := p.awsSecretKey
+	region := p.awsRegion
+
+	if req.Options.AWSAccessKeyID != nil && *req.Options.AWSAccessKeyID != "" {
+		accessKey = *req.Options.AWSAccessKeyID
+	}
+	if req.Options.AWSSecretAccessKey != nil && *req.Options.AWSSecretAccessKey != "" {
+		secretKey = *req.Options.AWSSecretAccessKey
+	}
+	if req.Options.AWSRegion != nil && *req.Options.AWSRegion != "" {
+		region = *req.Options.AWSRegion
+	}
+
+	if accessKey == "" || secretKey == "" {
+		return nil, &llm.ProviderError{
+			StatusCode: 400,
+			Message:    "AWS credentials required. Provide aws_access_key_id, aws_secret_access_key, and aws_region in request options",
+			Type:       "invalid_request_error",
+			Code:       "missing_aws_credentials",
+		}
+	}
+
 	bedrockReq := convertToBedrockRequest(req)
 	bedrockReq.Model = req.Model
 
@@ -53,14 +77,14 @@ func (p *Provider) Chat(ctx context.Context, req llm.ChatRequest) (*llm.ChatResp
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	url := fmt.Sprintf("https://bedrock-runtime.%s.amazonaws.com/model/%s/converse", p.awsRegion, req.Model)
+	url := fmt.Sprintf("https://bedrock-runtime.%s.amazonaws.com/model/%s/converse", region, req.Model)
 
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	p.signRequest(httpReq, body)
+	p.signRequest(httpReq, body, accessKey, secretKey, region)
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("Accept", "application/json")
 
@@ -88,6 +112,29 @@ func (p *Provider) Chat(ctx context.Context, req llm.ChatRequest) (*llm.ChatResp
 }
 
 func (p *Provider) ChatStream(ctx context.Context, req llm.ChatRequest, callback func(*llm.StreamChunk) error) error {
+	accessKey := p.awsAccessKey
+	secretKey := p.awsSecretKey
+	region := p.awsRegion
+
+	if req.Options.AWSAccessKeyID != nil && *req.Options.AWSAccessKeyID != "" {
+		accessKey = *req.Options.AWSAccessKeyID
+	}
+	if req.Options.AWSSecretAccessKey != nil && *req.Options.AWSSecretAccessKey != "" {
+		secretKey = *req.Options.AWSSecretAccessKey
+	}
+	if req.Options.AWSRegion != nil && *req.Options.AWSRegion != "" {
+		region = *req.Options.AWSRegion
+	}
+
+	if accessKey == "" || secretKey == "" {
+		return &llm.ProviderError{
+			StatusCode: 400,
+			Message:    "AWS credentials required. Provide aws_access_key_id, aws_secret_access_key, and aws_region in request options",
+			Type:       "invalid_request_error",
+			Code:       "missing_aws_credentials",
+		}
+	}
+
 	bedrockReq := convertToBedrockRequest(req)
 	bedrockReq.Model = req.Model
 
@@ -96,14 +143,14 @@ func (p *Provider) ChatStream(ctx context.Context, req llm.ChatRequest, callback
 		return fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	url := fmt.Sprintf("https://bedrock-runtime.%s.amazonaws.com/model/%s/converse-stream", p.awsRegion, req.Model)
+	url := fmt.Sprintf("https://bedrock-runtime.%s.amazonaws.com/model/%s/converse-stream", region, req.Model)
 
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 
-	p.signRequest(httpReq, body)
+	p.signRequest(httpReq, body, accessKey, secretKey, region)
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("Accept", "application/json")
 
@@ -147,7 +194,7 @@ func (p *Provider) ChatStream(ctx context.Context, req llm.ChatRequest, callback
 	return nil
 }
 
-func (p *Provider) signRequest(req *http.Request, body []byte) {
+func (p *Provider) signRequest(req *http.Request, body []byte, accessKey, secretKey, region string) {
 	now := time.Now().UTC()
 	date := now.Format("20060102T150405Z")
 	shortDate := now.Format("20060102")
@@ -167,14 +214,14 @@ func (p *Provider) signRequest(req *http.Request, body []byte) {
 		canonicalHeaders, strings.Split(req.URL.Path, "/")[3], signedHeaders, contentHash, "aws4_request")
 
 	hashedCanonicalRequest := sha256Hash([]byte(canonicalRequest))
-	credentialScope := fmt.Sprintf("%s/%s/%s/aws4_request", shortDate, p.awsRegion, awsService)
+	credentialScope := fmt.Sprintf("%s/%s/%s/aws4_request", shortDate, region, awsService)
 	stringToSign := fmt.Sprintf("AWS4-HMAC-SHA256\n%s\n%s\n%s", date, credentialScope, hashedCanonicalRequest)
 
-	signingKey := getSignatureKey(p.awsSecretKey, shortDate, p.awsRegion, awsService)
+	signingKey := getSignatureKey(secretKey, shortDate, region, awsService)
 	signature := hmacSHA256(signingKey, []byte(stringToSign))
 
 	authHeader := fmt.Sprintf("AWS4-HMAC-SHA256 Credential=%s/%s, SignedHeaders=%s, Signature=%s",
-		p.awsAccessKey, credentialScope, signedHeaders, hex.EncodeToString(signature))
+		accessKey, credentialScope, signedHeaders, hex.EncodeToString(signature))
 	req.Header.Set("Authorization", authHeader)
 }
 

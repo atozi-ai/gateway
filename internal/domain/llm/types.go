@@ -66,6 +66,15 @@ type ChatOptions struct {
 
 	Stream        *bool
 	StreamOptions *StreamOptions
+
+	// AWS credentials for Bedrock
+	AWSAccessKeyID     *string
+	AWSSecretAccessKey *string
+	AWSRegion          *string
+
+	// GCP credentials for Vertex AI
+	GCPProjectID *string
+	GCPLocation  *string
 }
 
 type ResponseFormat struct {
