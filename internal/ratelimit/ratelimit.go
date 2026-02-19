@@ -17,6 +17,7 @@ type RateLimitConfig struct {
 	RequestsPerHour   int
 	RequestsPerDay    int
 	Burst             int
+	MaxClients        int // Maximum number of unique clients to track
 }
 
 type RateLimiter struct {
@@ -62,10 +63,17 @@ func (rl *RateLimiter) getClient(key string) *clientLimiter {
 	rl.mu.RUnlock()
 
 	rl.mu.Lock()
+	defer rl.mu.Unlock()
+
+	// Double-check after acquiring write lock
 	if client, exists := rl.clients[key]; exists {
 		client.lastSeen = time.Now()
-		rl.mu.Unlock()
 		return client
+	}
+
+	// Evict oldest clients if at capacity
+	if rl.config.MaxClients > 0 && len(rl.clients) >= rl.config.MaxClients {
+		rl.evictOldest(rl.config.MaxClients / 4) // Evict 25% of capacity
 	}
 
 	now := time.Now()
@@ -83,9 +91,41 @@ func (rl *RateLimiter) getClient(key string) *clientLimiter {
 		lastSeen: now,
 	}
 	rl.clients[key] = client
-	rl.mu.Unlock()
 
 	return client
+}
+
+func (rl *RateLimiter) evictOldest(count int) {
+	type clientEntry struct {
+		key      string
+		lastSeen time.Time
+	}
+
+	entries := make([]clientEntry, 0, len(rl.clients))
+	for k, c := range rl.clients {
+		entries = append(entries, clientEntry{key: k, lastSeen: c.lastSeen})
+	}
+
+	// Sort by lastSeen ascending (oldest first)
+	for i := 0; i < len(entries)-1; i++ {
+		for j := i + 1; j < len(entries); j++ {
+			if entries[i].lastSeen.After(entries[j].lastSeen) {
+				entries[i], entries[j] = entries[j], entries[i]
+			}
+		}
+	}
+
+	// Remove oldest clients
+	for i := 0; i < count && i < len(entries); i++ {
+		delete(rl.clients, entries[i].key)
+	}
+
+	if count > 0 && len(entries) > 0 {
+		logger.Log.Info().
+			Int("evicted", min(count, len(entries))).
+			Int("remaining", len(rl.clients)).
+			Msg("Rate limiter evicted old clients")
+	}
 }
 
 func (rl *RateLimiter) Allow(key string) (bool, string) {
