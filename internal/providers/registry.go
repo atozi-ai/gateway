@@ -25,6 +25,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/providers/minimax"
 	"github.com/atozi-ai/gateway/internal/providers/mistral"
 	"github.com/atozi-ai/gateway/internal/providers/moonshot"
+	"github.com/atozi-ai/gateway/internal/providers/nebius"
 	"github.com/atozi-ai/gateway/internal/providers/novita"
 	"github.com/atozi-ai/gateway/internal/providers/ollama"
 	"github.com/atozi-ai/gateway/internal/providers/openai"
@@ -199,6 +200,8 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 		baseProvider = mistral.New()
 	case "moonshot":
 		baseProvider = moonshot.New()
+	case "nebius":
+		baseProvider = nebius.New()
 	case "together":
 		baseProvider = together.New()
 	case "upstage":
