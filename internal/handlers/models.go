@@ -175,6 +175,18 @@ func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 		{ID: "novita/mistral-nemo-instruct", Object: "model", OwnedBy: "mistral", Provider: "novita", Name: "Mistral Nemo Instruct", ContextLen: 128000},
 		{ID: "novita/gemma-2-9b-it", Object: "model", OwnedBy: "google", Provider: "novita", Name: "Gemma 2 9B Instruct", ContextLen: 8192},
 
+		// Ollama Models (Local Inference)
+		{ID: "ollama/llama3.3", Object: "model", OwnedBy: "meta", Provider: "ollama", Name: "Llama 3.3", ContextLen: 131072},
+		{ID: "ollama/llama3.2", Object: "model", OwnedBy: "meta", Provider: "ollama", Name: "Llama 3.2", ContextLen: 131072},
+		{ID: "ollama/llama3.1", Object: "model", OwnedBy: "meta", Provider: "ollama", Name: "Llama 3.1", ContextLen: 131072},
+		{ID: "ollama/mistral", Object: "model", OwnedBy: "mistral", Provider: "ollama", Name: "Mistral", ContextLen: 32768},
+		{ID: "ollama/codellama", Object: "model", OwnedBy: "meta", Provider: "ollama", Name: "Code Llama", ContextLen: 16384},
+		{ID: "ollama/qwen2.5", Object: "model", OwnedBy: "qwen", Provider: "ollama", Name: "Qwen 2.5", ContextLen: 131072},
+		{ID: "ollama/deepseek-coder-v2", Object: "model", OwnedBy: "deepseek", Provider: "ollama", Name: "DeepSeek Coder V2", ContextLen: 128000},
+		{ID: "ollama/phi4", Object: "model", OwnedBy: "microsoft", Provider: "ollama", Name: "Phi-4", ContextLen: 16384},
+		{ID: "ollama/gemma2", Object: "model", OwnedBy: "google", Provider: "ollama", Name: "Gemma 2", ContextLen: 8192},
+		{ID: "ollama/mixtral", Object: "model", OwnedBy: "mistral", Provider: "ollama", Name: "Mixtral 8x7B", ContextLen: 32768},
+
 		// Hyperbolic Models - Latest 2025-2026
 		{ID: "hyperbolic/deepseek-v3", Object: "model", OwnedBy: "deepseek", Provider: "hyperbolic", Name: "DeepSeek V3", ContextLen: 131072},
 		{ID: "hyperbolic/deepseek-r1", Object: "model", OwnedBy: "deepseek", Provider: "hyperbolic", Name: "DeepSeek R1", ContextLen: 131072},

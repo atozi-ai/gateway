@@ -25,6 +25,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/providers/mistral"
 	"github.com/atozi-ai/gateway/internal/providers/moonshot"
 	"github.com/atozi-ai/gateway/internal/providers/novita"
+	"github.com/atozi-ai/gateway/internal/providers/ollama"
 	"github.com/atozi-ai/gateway/internal/providers/openai"
 	"github.com/atozi-ai/gateway/internal/providers/perplexity"
 	"github.com/atozi-ai/gateway/internal/providers/replicate"
@@ -208,6 +209,8 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 		baseProvider = cohere.New()
 	case "novita":
 		baseProvider = novita.New()
+	case "ollama":
+		baseProvider = ollama.New()
 	case "siliconflow":
 		baseProvider = siliconflow.New()
 	default:
