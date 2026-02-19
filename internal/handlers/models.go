@@ -121,6 +121,20 @@ func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 		{ID: "groq/deepseek-r1-distill-qwen-32b", Object: "model", OwnedBy: "deepseek", Provider: "groq", Name: "DeepSeek R1 Distill Qwen 32B", ContextLen: 131072},
 		{ID: "groq/gemma2-9b-it", Object: "model", OwnedBy: "google", Provider: "groq", Name: "Gemma 2 9B", ContextLen: 8192},
 		{ID: "groq/mistral-saba-24b", Object: "model", OwnedBy: "mistral", Provider: "groq", Name: "Mistral Saba 24B", ContextLen: 32000},
+
+		// Together AI Models - Latest 2025-2026
+		{ID: "together/llama-3.3-70b-instruct-turbo", Object: "model", OwnedBy: "meta", Provider: "together", Name: "Llama 3.3 70B Turbo", ContextLen: 131072},
+		{ID: "together/llama-3.1-405b-instruct-turbo", Object: "model", OwnedBy: "meta", Provider: "together", Name: "Llama 3.1 405B Turbo", ContextLen: 131072},
+		{ID: "together/llama-3.1-70b-instruct-turbo", Object: "model", OwnedBy: "meta", Provider: "together", Name: "Llama 3.1 70B Turbo", ContextLen: 131072},
+		{ID: "together/llama-3.1-8b-instruct-turbo", Object: "model", OwnedBy: "meta", Provider: "together", Name: "Llama 3.1 8B Turbo", ContextLen: 131072},
+		{ID: "together/deepseek-v3.1", Object: "model", OwnedBy: "deepseek", Provider: "together", Name: "DeepSeek V3.1", ContextLen: 128000},
+		{ID: "together/qwen3.5-397b-a17b", Object: "model", OwnedBy: "qwen", Provider: "together", Name: "Qwen 3.5 397B A17B", ContextLen: 262144},
+		{ID: "together/qwen2.5-72b-instruct", Object: "model", OwnedBy: "qwen", Provider: "together", Name: "Qwen 2.5 72B Instruct", ContextLen: 131072},
+		{ID: "together/qwen2.5-32b-instruct", Object: "model", OwnedBy: "qwen", Provider: "together", Name: "Qwen 2.5 32B Instruct", ContextLen: 131072},
+		{ID: "together/mistral-large-3", Object: "model", OwnedBy: "mistral", Provider: "together", Name: "Mistral Large 3", ContextLen: 131072},
+		{ID: "together/mistral-medium-3-1", Object: "model", OwnedBy: "mistral", Provider: "together", Name: "Mistral Medium 3.1", ContextLen: 131072},
+		{ID: "together/moonshotai-kimi-k2-instruct", Object: "model", OwnedBy: "moonshot", Provider: "together", Name: "Kimi K2 Instruct", ContextLen: 262144},
+		{ID: "together/minimax-m2.5", Object: "model", OwnedBy: "minimax", Provider: "together", Name: "MiniMax M2.5", ContextLen: 228700},
 	}
 
 	response := ModelsListResponse{

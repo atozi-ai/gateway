@@ -18,6 +18,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/providers/groq"
 	"github.com/atozi-ai/gateway/internal/providers/mistral"
 	"github.com/atozi-ai/gateway/internal/providers/openai"
+	"github.com/atozi-ai/gateway/internal/providers/together"
 	"github.com/atozi-ai/gateway/internal/providers/xai"
 	"github.com/atozi-ai/gateway/internal/providers/zai"
 	"github.com/atozi-ai/gateway/internal/retry"
@@ -171,6 +172,8 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 		baseProvider = deepseek.New()
 	case "mistral":
 		baseProvider = mistral.New()
+	case "together":
+		baseProvider = together.New()
 	default:
 		return nil, &llm.ProviderError{
 			StatusCode: 400,
