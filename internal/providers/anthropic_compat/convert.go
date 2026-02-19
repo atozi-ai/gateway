@@ -76,6 +76,18 @@ func toRequest(req llm.ChatRequest) messageRequest {
 		}
 	}
 
+	var outputCfg *outputConfig
+	if opts.ResponseFormat != nil {
+		if opts.ResponseFormat.Type == "json_object" || opts.ResponseFormat.Type == "json_schema" {
+			outputCfg = &outputConfig{
+				Format: &outputFormat{
+					Type:   "json_schema",
+					Schema: opts.ResponseFormat.Schema,
+				},
+			}
+		}
+	}
+
 	return messageRequest{
 		Model:         req.Model,
 		MaxTokens:     maxTokens,
@@ -87,6 +99,7 @@ func toRequest(req llm.ChatRequest) messageRequest {
 		ToolChoice:    toolChoice,
 		Stream:        opts.Stream,
 		StopSequences: opts.Stop,
+		OutputConfig:  outputCfg,
 	}
 }
 

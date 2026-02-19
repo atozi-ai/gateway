@@ -43,6 +43,15 @@ type tool struct {
 	Parameters  json.RawMessage `json:"parameters,omitempty"`
 }
 
+type outputFormat struct {
+	Type   string          `json:"type"`
+	Schema json.RawMessage `json:"schema,omitempty"`
+}
+
+type outputConfig struct {
+	Format *outputFormat `json:"format,omitempty"`
+}
+
 type messageRequest struct {
 	Model         string         `json:"model"`
 	MaxTokens     int            `json:"max_tokens"`
@@ -54,6 +63,7 @@ type messageRequest struct {
 	ToolChoice    *toolChoice    `json:"tool_choice,omitempty"`
 	Stream        *bool          `json:"stream,omitempty"`
 	StopSequences []string       `json:"stop_sequences,omitempty"`
+	OutputConfig  *outputConfig  `json:"output_config,omitempty"`
 }
 
 type toolChoice struct {
