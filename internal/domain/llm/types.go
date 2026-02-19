@@ -75,6 +75,9 @@ type ChatOptions struct {
 	// GCP credentials for Vertex AI
 	GCPProjectID *string
 	GCPLocation  *string
+
+	// Azure credentials
+	AzureEndpoint *string
 }
 
 type ResponseFormat struct {

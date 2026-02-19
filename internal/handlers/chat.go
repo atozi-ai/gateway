@@ -57,6 +57,18 @@ type ChatOptionsPayload struct {
 	StreamOptions      *StreamOptionsPayload `json:"streamOptions,omitempty"`
 	Raw                *bool                 `json:"raw,omitempty"`
 	IncludeAccumulated *bool                 `json:"includeAccumulated,omitempty"`
+
+	// AWS credentials for Bedrock
+	AWSAccessKeyID     *string `json:"awsAccessKeyID,omitempty"`
+	AWSSecretAccessKey *string `json:"awsSecretAccessKey,omitempty"`
+	AWSRegion          *string `json:"awsRegion,omitempty"`
+
+	// GCP credentials for Vertex AI
+	GCPProjectID *string `json:"gcpProjectID,omitempty"`
+	GCPLocation  *string `json:"gcpLocation,omitempty"`
+
+	// Azure credentials
+	AzureEndpoint *string `json:"azureEndpoint,omitempty"`
 }
 
 type ToolPayload struct {
@@ -285,6 +297,18 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 			User:              payload.Options.User,
 			Stream:            payload.Options.Stream,
 			ParallelToolCalls: payload.Options.ParallelToolCalls,
+
+			// AWS credentials for Bedrock
+			AWSAccessKeyID:     payload.Options.AWSAccessKeyID,
+			AWSSecretAccessKey: payload.Options.AWSSecretAccessKey,
+			AWSRegion:          payload.Options.AWSRegion,
+
+			// GCP credentials for Vertex AI
+			GCPProjectID: payload.Options.GCPProjectID,
+			GCPLocation:  payload.Options.GCPLocation,
+
+			// Azure credentials
+			AzureEndpoint: payload.Options.AzureEndpoint,
 		}
 
 		if payload.Options.ResponseFormat != nil {
