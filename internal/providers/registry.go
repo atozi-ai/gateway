@@ -16,6 +16,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/providers/azure"
 	"github.com/atozi-ai/gateway/internal/providers/cerebras"
 	"github.com/atozi-ai/gateway/internal/providers/cohere"
+	"github.com/atozi-ai/gateway/internal/providers/deepinfra"
 	"github.com/atozi-ai/gateway/internal/providers/deepseek"
 	"github.com/atozi-ai/gateway/internal/providers/fireworks"
 	"github.com/atozi-ai/gateway/internal/providers/gemini"
@@ -189,6 +190,8 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 		baseProvider = hyperbolic.New()
 	case "minimax":
 		baseProvider = minimax.New()
+	case "deepinfra":
+		baseProvider = deepinfra.New()
 	case "deepseek":
 		baseProvider = deepseek.New()
 	case "mistral":
