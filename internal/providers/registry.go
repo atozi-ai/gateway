@@ -11,6 +11,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/domain/llm"
 	"github.com/atozi-ai/gateway/internal/failover"
 	"github.com/atozi-ai/gateway/internal/platform/logger"
+	"github.com/atozi-ai/gateway/internal/providers/ai21"
 	"github.com/atozi-ai/gateway/internal/providers/anthropic"
 	"github.com/atozi-ai/gateway/internal/providers/anyscale"
 	"github.com/atozi-ai/gateway/internal/providers/azure"
@@ -21,6 +22,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/providers/deepinfra"
 	"github.com/atozi-ai/gateway/internal/providers/deepseek"
 	"github.com/atozi-ai/gateway/internal/providers/fireworks"
+	"github.com/atozi-ai/gateway/internal/providers/friendli"
 	"github.com/atozi-ai/gateway/internal/providers/gemini"
 	"github.com/atozi-ai/gateway/internal/providers/groq"
 	"github.com/atozi-ai/gateway/internal/providers/hyperbolic"
@@ -29,6 +31,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/providers/moonshot"
 	"github.com/atozi-ai/gateway/internal/providers/nebius"
 	"github.com/atozi-ai/gateway/internal/providers/novita"
+	"github.com/atozi-ai/gateway/internal/providers/nvidia"
 	"github.com/atozi-ai/gateway/internal/providers/ollama"
 	"github.com/atozi-ai/gateway/internal/providers/openai"
 	"github.com/atozi-ai/gateway/internal/providers/perplexity"
@@ -176,6 +179,8 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 			}
 		}
 		baseProvider = azure.New("", endpoint)
+	case "ai21":
+		baseProvider = ai21.New()
 	case "baseten":
 		baseProvider = baseten.New()
 	case "anyscale":
@@ -208,12 +213,16 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 		baseProvider = moonshot.New()
 	case "nebius":
 		baseProvider = nebius.New()
+	case "nvidia":
+		baseProvider = nvidia.New()
 	case "together":
 		baseProvider = together.New()
 	case "upstage":
 		baseProvider = upstage.New()
 	case "fireworks":
 		baseProvider = fireworks.New()
+	case "friendli":
+		baseProvider = friendli.New()
 	case "perplexity":
 		baseProvider = perplexity.New()
 	case "replicate":

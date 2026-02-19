@@ -266,6 +266,20 @@ func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 		{ID: "baseten/llama-3.3-70b", Object: "model", OwnedBy: "meta", Provider: "baseten", Name: "Llama 3.3 70B", ContextLen: 131072},
 		{ID: "baseten/qwen-2.5-72b", Object: "model", OwnedBy: "qwen", Provider: "baseten", Name: "Qwen 2.5 72B", ContextLen: 131072},
 
+		// AI21 Labs Models - Latest 2025-2026
+		{ID: "ai21/jamba-2", Object: "model", OwnedBy: "ai21", Provider: "ai21", Name: "Jamba 2", ContextLen: 256000},
+		{ID: "ai21/jamba-1.5", Object: "model", OwnedBy: "ai21", Provider: "ai21", Name: "Jamba 1.5", ContextLen: 256000},
+
+		// NVIDIA NIM Models - Latest 2025-2026
+		{ID: "nvidia/llama-3.3-70b-instruct", Object: "model", OwnedBy: "meta", Provider: "nvidia", Name: "Llama 3.3 70B Instruct", ContextLen: 131072},
+		{ID: "nvidia/llama-3.1-405b-instruct", Object: "model", OwnedBy: "meta", Provider: "nvidia", Name: "Llama 3.1 405B Instruct", ContextLen: 131072},
+		{ID: "nvidia/qwen2.5-72b-instruct", Object: "model", OwnedBy: "qwen", Provider: "nvidia", Name: "Qwen 2.5 72B Instruct", ContextLen: 131072},
+
+		// FriendliAI Models - Latest 2025-2026
+		{ID: "friendli/llama-3.3-70b", Object: "model", OwnedBy: "meta", Provider: "friendli", Name: "Llama 3.3 70B", ContextLen: 131072},
+		{ID: "friendli/deepseek-v3", Object: "model", OwnedBy: "deepseek", Provider: "friendli", Name: "DeepSeek V3", ContextLen: 128000},
+		{ID: "friendli/qwen-2.5-72b", Object: "model", OwnedBy: "qwen", Provider: "friendli", Name: "Qwen 2.5 72B", ContextLen: 131072},
+
 		// Cloudflare Workers AI Models - Latest 2025-2026
 		{ID: "cloudflare/llama-3.1-8b", Object: "model", OwnedBy: "meta", Provider: "cloudflare", Name: "Llama 3.1 8B", ContextLen: 128000},
 		{ID: "cloudflare/llama-3.2-1b", Object: "model", OwnedBy: "meta", Provider: "cloudflare", Name: "Llama 3.2 1B", ContextLen: 128000},
