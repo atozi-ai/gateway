@@ -201,6 +201,16 @@ func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 		{ID: "minimax/abab6.5s", Object: "model", OwnedBy: "minimax", Provider: "minimax", Name: "abab 6.5s", ContextLen: 200000},
 		{ID: "minimax/m2.5", Object: "model", OwnedBy: "minimax", Provider: "minimax", Name: "MiniMax M2.5", ContextLen: 204800},
 		{ID: "minimax/m2.1", Object: "model", OwnedBy: "minimax", Provider: "minimax", Name: "MiniMax M2.1", ContextLen: 204800},
+
+		// SiliconFlow Models - Latest 2025-2026
+		{ID: "siliconflow/qwen-2.5-72b-instruct", Object: "model", OwnedBy: "qwen", Provider: "siliconflow", Name: "Qwen 2.5 72B Instruct", ContextLen: 131072},
+		{ID: "siliconflow/qwen-2.5-vl-7b-instruct", Object: "model", OwnedBy: "qwen", Provider: "siliconflow", Name: "Qwen 2.5 VL 7B Instruct", ContextLen: 32768},
+		{ID: "siliconflow/qwen-3-32b", Object: "model", OwnedBy: "qwen", Provider: "siliconflow", Name: "Qwen 3 32B", ContextLen: 131072},
+		{ID: "siliconflow/qwen-3-14b", Object: "model", OwnedBy: "qwen", Provider: "siliconflow", Name: "Qwen 3 14B", ContextLen: 131072},
+		{ID: "siliconflow/deepseek-v2.5", Object: "model", OwnedBy: "deepseek", Provider: "siliconflow", Name: "DeepSeek V2.5", ContextLen: 128000},
+		{ID: "siliconflow/deepseek-r1-distill-qwen-14b", Object: "model", OwnedBy: "deepseek", Provider: "siliconflow", Name: "DeepSeek R1 Distill Qwen 14B", ContextLen: 131072},
+		{ID: "siliconflow/llama-3.1-8b-instruct", Object: "model", OwnedBy: "meta", Provider: "siliconflow", Name: "Llama 3.1 8B Instruct", ContextLen: 131072},
+		{ID: "siliconflow/glm-4-9b-chat", Object: "model", OwnedBy: "zhipu", Provider: "siliconflow", Name: "GLM 4 9B Chat", ContextLen: 131072},
 	}
 
 	response := ModelsListResponse{
