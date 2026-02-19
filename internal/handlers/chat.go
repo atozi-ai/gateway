@@ -433,6 +433,11 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 			parsedResponse.Model = resp.Model
 			parsedResponse.Object = "chat.completion"
 		}
+		if len(parsedResponse.Choices) == 0 && resp.Content != "" {
+			parsedResponse.ID = resp.ID
+			parsedResponse.Model = resp.Model
+			parsedResponse.Object = "chat.completion"
+		}
 	} else {
 		parsedResponse.ID = resp.ID
 		parsedResponse.Model = resp.Model
@@ -549,7 +554,7 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 		response.Content = resp.Content
 	}
 
-	if includeRaw && len(resp.Raw) > 0 {
+	if includeRaw && resp.Raw != nil {
 		response.Raw = resp.Raw
 	}
 
