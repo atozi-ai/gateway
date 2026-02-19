@@ -16,10 +16,12 @@ type Part struct {
 }
 
 type GenerationConfig struct {
-	Temperature     *float32 `json:"temperature,omitempty"`
-	MaxOutputTokens *int     `json:"maxOutputTokens,omitempty"`
-	TopP            *float32 `json:"topP,omitempty"`
-	StopSequences   []string `json:"stopSequences,omitempty"`
+	Temperature      *float32        `json:"temperature,omitempty"`
+	MaxOutputTokens  *int            `json:"maxOutputTokens,omitempty"`
+	TopP             *float32        `json:"topP,omitempty"`
+	StopSequences    []string        `json:"stopSequences,omitempty"`
+	ResponseMimeType string          `json:"responseMimeType,omitempty"`
+	ResponseSchema   json.RawMessage `json:"responseSchema,omitempty"`
 }
 
 type Tool struct {

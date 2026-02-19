@@ -58,6 +58,13 @@ func toRequest(req llm.ChatRequest) GenerateContentRequest {
 		StopSequences:   opts.Stop,
 	}
 
+	if opts.ResponseFormat != nil {
+		if opts.ResponseFormat.Type == "json_object" || opts.ResponseFormat.Type == "json_schema" {
+			genConfig.ResponseMimeType = "application/json"
+			genConfig.ResponseSchema = opts.ResponseFormat.Schema
+		}
+	}
+
 	return GenerateContentRequest{
 		Contents:          contents,
 		SystemInstruction: systemInstruction,
