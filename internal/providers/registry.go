@@ -18,6 +18,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/providers/fireworks"
 	"github.com/atozi-ai/gateway/internal/providers/gemini"
 	"github.com/atozi-ai/gateway/internal/providers/groq"
+	"github.com/atozi-ai/gateway/internal/providers/hyperbolic"
 	"github.com/atozi-ai/gateway/internal/providers/mistral"
 	"github.com/atozi-ai/gateway/internal/providers/novita"
 	"github.com/atozi-ai/gateway/internal/providers/openai"
@@ -172,6 +173,8 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 		baseProvider = gemini.New()
 	case "groq":
 		baseProvider = groq.New()
+	case "hyperbolic":
+		baseProvider = hyperbolic.New()
 	case "deepseek":
 		baseProvider = deepseek.New()
 	case "mistral":
