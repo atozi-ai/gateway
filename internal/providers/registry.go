@@ -19,6 +19,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/providers/groq"
 	"github.com/atozi-ai/gateway/internal/providers/mistral"
 	"github.com/atozi-ai/gateway/internal/providers/openai"
+	"github.com/atozi-ai/gateway/internal/providers/perplexity"
 	"github.com/atozi-ai/gateway/internal/providers/together"
 	"github.com/atozi-ai/gateway/internal/providers/xai"
 	"github.com/atozi-ai/gateway/internal/providers/zai"
@@ -177,6 +178,8 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 		baseProvider = together.New()
 	case "fireworks":
 		baseProvider = fireworks.New()
+	case "perplexity":
+		baseProvider = perplexity.New()
 	default:
 		return nil, &llm.ProviderError{
 			StatusCode: 400,
