@@ -225,6 +225,12 @@ func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 		{ID: "anyscale/llama-3.1-8b-instruct", Object: "model", OwnedBy: "meta", Provider: "anyscale", Name: "Llama 3.1 8B Instruct", ContextLen: 131072},
 		{ID: "anyscale/llama-4-maverick", Object: "model", OwnedBy: "meta", Provider: "anyscale", Name: "Llama 4 Maverick", ContextLen: 131072},
 		{ID: "anyscale/mistral-7b-instruct", Object: "model", OwnedBy: "mistral", Provider: "anyscale", Name: "Mistral 7B Instruct", ContextLen: 32768},
+
+		// Cerebras Models - Latest 2025-2026
+		{ID: "cerebras/llama-4-scout", Object: "model", OwnedBy: "meta", Provider: "cerebras", Name: "Llama 4 Scout", ContextLen: 131072},
+		{ID: "cerebras/llama-4-maverick", Object: "model", OwnedBy: "meta", Provider: "cerebras", Name: "Llama 4 Maverick", ContextLen: 131072},
+		{ID: "cerebras/llama-3.3-70b", Object: "model", OwnedBy: "meta", Provider: "cerebras", Name: "Llama 3.3 70B", ContextLen: 131072},
+		{ID: "cerebras/llama-3.1-405b", Object: "model", OwnedBy: "meta", Provider: "cerebras", Name: "Llama 3.1 405B", ContextLen: 131072},
 	}
 
 	response := ModelsListResponse{
