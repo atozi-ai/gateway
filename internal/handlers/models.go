@@ -107,6 +107,20 @@ func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 		{ID: "mistral/pixtral-large", Object: "model", OwnedBy: "mistral", Provider: "mistral", Name: "Pixtral Large", ContextLen: 128000},
 		{ID: "mistral/voxtral", Object: "model", OwnedBy: "mistral", Provider: "mistral", Name: "Voxtral", ContextLen: 128000},
 		{ID: "mistral/nemo", Object: "model", OwnedBy: "mistral", Provider: "mistral", Name: "Nemo", ContextLen: 128000},
+
+		// Groq Models - Latest 2025-2026
+		{ID: "groq/llama-3.3-70b-versatile", Object: "model", OwnedBy: "meta", Provider: "groq", Name: "Llama 3.3 70B", ContextLen: 131072},
+		{ID: "groq/llama-3.1-8b-instant", Object: "model", OwnedBy: "meta", Provider: "groq", Name: "Llama 3.1 8B", ContextLen: 131072},
+		{ID: "groq/llama-4-maverick", Object: "model", OwnedBy: "meta", Provider: "groq", Name: "Llama 4 Maverick", ContextLen: 131072},
+		{ID: "groq/llama-4-scout", Object: "model", OwnedBy: "meta", Provider: "groq", Name: "Llama 4 Scout", ContextLen: 131072},
+		{ID: "groq/openai-gpt-oss-120b", Object: "model", OwnedBy: "openai", Provider: "groq", Name: "GPT-OSS 120B", ContextLen: 131072},
+		{ID: "groq/openai-gpt-oss-20b", Object: "model", OwnedBy: "openai", Provider: "groq", Name: "GPT-OSS 20B", ContextLen: 131072},
+		{ID: "groq/qwen-2.5-32b", Object: "model", OwnedBy: "alibaba", Provider: "groq", Name: "Qwen 2.5 32B", ContextLen: 131072},
+		{ID: "groq/qwen-2.5-coder-32b", Object: "model", OwnedBy: "alibaba", Provider: "groq", Name: "Qwen 2.5 Coder 32B", ContextLen: 131072},
+		{ID: "groq/qwen-qwq-32b", Object: "model", OwnedBy: "alibaba", Provider: "groq", Name: "Qwen QwQ 32B", ContextLen: 131072},
+		{ID: "groq/deepseek-r1-distill-qwen-32b", Object: "model", OwnedBy: "deepseek", Provider: "groq", Name: "DeepSeek R1 Distill Qwen 32B", ContextLen: 131072},
+		{ID: "groq/gemma2-9b-it", Object: "model", OwnedBy: "google", Provider: "groq", Name: "Gemma 2 9B", ContextLen: 8192},
+		{ID: "groq/mistral-saba-24b", Object: "model", OwnedBy: "mistral", Provider: "groq", Name: "Mistral Saba 24B", ContextLen: 32000},
 	}
 
 	response := ModelsListResponse{

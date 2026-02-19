@@ -15,6 +15,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/providers/azure"
 	"github.com/atozi-ai/gateway/internal/providers/deepseek"
 	"github.com/atozi-ai/gateway/internal/providers/gemini"
+	"github.com/atozi-ai/gateway/internal/providers/groq"
 	"github.com/atozi-ai/gateway/internal/providers/mistral"
 	"github.com/atozi-ai/gateway/internal/providers/openai"
 	"github.com/atozi-ai/gateway/internal/providers/xai"
@@ -164,6 +165,8 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 		baseProvider = anthropic.New()
 	case "gemini":
 		baseProvider = gemini.New()
+	case "groq":
+		baseProvider = groq.New()
 	case "deepseek":
 		baseProvider = deepseek.New()
 	case "mistral":
