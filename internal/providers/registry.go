@@ -26,6 +26,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/providers/gemini"
 	"github.com/atozi-ai/gateway/internal/providers/groq"
 	"github.com/atozi-ai/gateway/internal/providers/hyperbolic"
+	"github.com/atozi-ai/gateway/internal/providers/liquid"
 	"github.com/atozi-ai/gateway/internal/providers/minimax"
 	"github.com/atozi-ai/gateway/internal/providers/mistral"
 	"github.com/atozi-ai/gateway/internal/providers/moonshot"
@@ -40,10 +41,12 @@ import (
 	"github.com/atozi-ai/gateway/internal/providers/sambanova"
 	"github.com/atozi-ai/gateway/internal/providers/scaleway"
 	"github.com/atozi-ai/gateway/internal/providers/siliconflow"
+	"github.com/atozi-ai/gateway/internal/providers/stepfun"
 	"github.com/atozi-ai/gateway/internal/providers/together"
 	"github.com/atozi-ai/gateway/internal/providers/upstage"
 	"github.com/atozi-ai/gateway/internal/providers/venice"
 	"github.com/atozi-ai/gateway/internal/providers/xai"
+	"github.com/atozi-ai/gateway/internal/providers/xiaomi"
 	"github.com/atozi-ai/gateway/internal/providers/zai"
 	"github.com/atozi-ai/gateway/internal/retry"
 )
@@ -246,6 +249,12 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 		baseProvider = ollama.New()
 	case "siliconflow":
 		baseProvider = siliconflow.New()
+	case "stepfun":
+		baseProvider = stepfun.New()
+	case "xiaomi":
+		baseProvider = xiaomi.New()
+	case "liquid":
+		baseProvider = liquid.New()
 	default:
 		return nil, &llm.ProviderError{
 			StatusCode: 400,
