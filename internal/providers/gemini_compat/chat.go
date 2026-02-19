@@ -29,7 +29,8 @@ func (c *Client) Chat(ctx context.Context, req llm.ChatRequest) (*llm.ChatRespon
 	log := logger.FromContext(ctx)
 	log.Info().Str("model", req.Model).Msg("Using Gemini Model")
 
-	url := c.endpoint(req.Model)
+	model := strings.TrimPrefix(req.Model, "gemini/")
+	url := c.endpoint(model)
 
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(jsonBody))
 	if err != nil {
@@ -57,7 +58,10 @@ func (c *Client) Chat(ctx context.Context, req llm.ChatRequest) (*llm.ChatRespon
 		return nil, llm.NewInternalError(fmt.Sprintf("failed to unmarshal response: %v", err))
 	}
 
-	return toChatResponse(raw, req.Model), nil
+	chatResp := toChatResponse(raw, model)
+	chatResp.Raw = respBody
+
+	return chatResp, nil
 }
 
 func (c *Client) ChatStream(ctx context.Context, req llm.ChatRequest, callback func(*llm.StreamChunk) error) error {
@@ -75,7 +79,8 @@ func (c *Client) ChatStream(ctx context.Context, req llm.ChatRequest, callback f
 	log := logger.FromContext(ctx)
 	log.Info().Str("model", req.Model).Msg("Using Gemini Model for streaming")
 
-	url := c.streamEndpoint(req.Model)
+	model := strings.TrimPrefix(req.Model, "gemini/")
+	url := c.streamEndpoint(model)
 
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(jsonBody))
 	if err != nil {

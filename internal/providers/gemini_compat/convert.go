@@ -1,8 +1,6 @@
 package gemini_compat
 
 import (
-	"encoding/json"
-
 	"github.com/atozi-ai/gateway/internal/domain/llm"
 )
 
@@ -79,12 +77,9 @@ func toChatResponse(resp GenerateContentResponse, model string) *llm.ChatRespons
 		}
 	}
 
-	raw, _ := json.Marshal(resp)
-
 	return &llm.ChatResponse{
-		ID:      "",
+		ID:      resp.ModelVersion,
 		Model:   model,
 		Content: content,
-		Raw:     raw,
 	}
 }
