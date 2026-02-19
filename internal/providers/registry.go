@@ -16,6 +16,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/providers/azure"
 	"github.com/atozi-ai/gateway/internal/providers/baseten"
 	"github.com/atozi-ai/gateway/internal/providers/cerebras"
+	"github.com/atozi-ai/gateway/internal/providers/cloudflare"
 	"github.com/atozi-ai/gateway/internal/providers/cohere"
 	"github.com/atozi-ai/gateway/internal/providers/deepinfra"
 	"github.com/atozi-ai/gateway/internal/providers/deepseek"
@@ -181,6 +182,8 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 		baseProvider = anyscale.New()
 	case "cerebras":
 		baseProvider = cerebras.New()
+	case "cloudflare":
+		baseProvider = cloudflare.New()
 	case "xai":
 		baseProvider = xai.New()
 	case "zai":
