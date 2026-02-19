@@ -53,6 +53,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/providers/together"
 	"github.com/atozi-ai/gateway/internal/providers/upstage"
 	"github.com/atozi-ai/gateway/internal/providers/venice"
+	"github.com/atozi-ai/gateway/internal/providers/vertex"
 	"github.com/atozi-ai/gateway/internal/providers/xai"
 	"github.com/atozi-ai/gateway/internal/providers/xiaomi"
 	"github.com/atozi-ai/gateway/internal/providers/zai"
@@ -217,6 +218,8 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 		baseProvider = anthropic.New()
 	case "gemini":
 		baseProvider = gemini.New()
+	case "vertex":
+		baseProvider = vertex.New(os.Getenv("GOOGLE_PROJECT_ID"), os.Getenv("GOOGLE_LOCATION"))
 	case "groq":
 		baseProvider = groq.New()
 	case "hyperbolic":
