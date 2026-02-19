@@ -13,6 +13,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/platform/logger"
 	"github.com/atozi-ai/gateway/internal/providers"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/rs/zerolog"
 )
 
@@ -157,7 +158,7 @@ type TokensDetailsPayload struct {
 	RejectedPredictionTokens *int `json:"rejectedPredictionTokens,omitempty"`
 }
 
-func writeError(w http.ResponseWriter, err error) {
+func writeError(w http.ResponseWriter, ctx context.Context, err error) {
 	var pe *llm.ProviderError
 	if providerErr, ok := err.(*llm.ProviderError); ok {
 		pe = providerErr
@@ -165,6 +166,7 @@ func writeError(w http.ResponseWriter, err error) {
 		pe = llm.NewInternalError("Internal server error")
 	}
 
+	setRequestIDHeader(w, ctx)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(pe.StatusCode)
 
@@ -184,23 +186,29 @@ func writeError(w http.ResponseWriter, err error) {
 	json.NewEncoder(w).Encode(resp)
 }
 
+func setRequestIDHeader(w http.ResponseWriter, ctx context.Context) {
+	if reqID := middleware.GetReqID(ctx); reqID != "" {
+		w.Header().Set("X-Request-Id", reqID)
+	}
+}
+
 func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 	log := logger.FromContext(r.Context())
 
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
-		writeError(w, llm.NewUnauthorizedError("missing Authorization header"))
+		writeError(w, r.Context(), llm.NewUnauthorizedError("missing Authorization header"))
 		return
 	}
 
 	const bearerPrefix = "Bearer "
 	if !strings.HasPrefix(authHeader, bearerPrefix) {
-		writeError(w, llm.NewValidationError("invalid Authorization header format", "invalid_auth_format"))
+		writeError(w, r.Context(), llm.NewValidationError("invalid Authorization header format", "invalid_auth_format"))
 		return
 	}
 	apiKey := strings.TrimPrefix(authHeader, bearerPrefix)
 	if apiKey == "" {
-		writeError(w, llm.NewUnauthorizedError("missing API key in Authorization header"))
+		writeError(w, r.Context(), llm.NewUnauthorizedError("missing API key in Authorization header"))
 		return
 	}
 
@@ -210,22 +218,22 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		log.Error().Err(err).Msg("Failed to decode request")
-		writeError(w, llm.NewValidationError("Invalid request body", "invalid_json"))
+		writeError(w, r.Context(), llm.NewValidationError("Invalid request body", "invalid_json"))
 		return
 	}
 
 	if payload.Model == "" {
-		writeError(w, llm.NewValidationError("model is required", "missing_model"))
+		writeError(w, r.Context(), llm.NewValidationError("model is required", "missing_model"))
 		return
 	}
 
 	if len(payload.Messages) == 0 {
-		writeError(w, llm.NewValidationError("messages are required", "missing_messages"))
+		writeError(w, r.Context(), llm.NewValidationError("messages are required", "missing_messages"))
 		return
 	}
 
 	if len(payload.Messages) > 1000 {
-		writeError(w, llm.NewValidationError("too many messages (max 1000)", "too_many_messages"))
+		writeError(w, r.Context(), llm.NewValidationError("too many messages (max 1000)", "too_many_messages"))
 		return
 	}
 
@@ -323,7 +331,7 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 	provider, model, err := providers.Get(req.Model, apiKey, payload.Endpoint)
 	if err != nil {
 		log.Error().Err(err).Str("model", req.Model).Msg("Invalid provider/model")
-		writeError(w, err)
+		writeError(w, r.Context(), err)
 		return
 	}
 	req.Model = model
@@ -355,7 +363,7 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 	resp, err := provider.Chat(ctx, req)
 	if err != nil {
 		log.Error().Err(err).Msg("Chat request failed")
-		writeError(w, err)
+		writeError(w, r.Context(), err)
 		return
 	}
 
@@ -543,6 +551,7 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	setRequestIDHeader(w, r.Context())
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Error().Err(err).Msg("Failed to encode response")
 		return
@@ -624,11 +633,12 @@ func (h *ChatHandler) handleStreamingChat(
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("X-Accel-Buffering", "no")
+	setRequestIDHeader(w, ctx)
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		log.Error().Msg("Streaming not supported by response writer")
-		writeError(w, llm.NewInternalError("Streaming not supported"))
+		writeError(w, ctx, llm.NewInternalError("Streaming not supported"))
 		return
 	}
 
