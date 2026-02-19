@@ -14,6 +14,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/providers/anthropic"
 	"github.com/atozi-ai/gateway/internal/providers/anyscale"
 	"github.com/atozi-ai/gateway/internal/providers/azure"
+	"github.com/atozi-ai/gateway/internal/providers/cerebras"
 	"github.com/atozi-ai/gateway/internal/providers/cohere"
 	"github.com/atozi-ai/gateway/internal/providers/deepseek"
 	"github.com/atozi-ai/gateway/internal/providers/fireworks"
@@ -171,6 +172,8 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 		baseProvider = azure.New("", endpoint)
 	case "anyscale":
 		baseProvider = anyscale.New()
+	case "cerebras":
+		baseProvider = cerebras.New()
 	case "xai":
 		baseProvider = xai.New()
 	case "zai":
