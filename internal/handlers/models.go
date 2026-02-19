@@ -135,6 +135,20 @@ func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 		{ID: "together/mistral-medium-3-1", Object: "model", OwnedBy: "mistral", Provider: "together", Name: "Mistral Medium 3.1", ContextLen: 131072},
 		{ID: "together/moonshotai-kimi-k2-instruct", Object: "model", OwnedBy: "moonshot", Provider: "together", Name: "Kimi K2 Instruct", ContextLen: 262144},
 		{ID: "together/minimax-m2.5", Object: "model", OwnedBy: "minimax", Provider: "together", Name: "MiniMax M2.5", ContextLen: 228700},
+
+		// Fireworks AI Models - Latest 2025-2026
+		{ID: "fireworks/llama-v3p3-70b-instruct", Object: "model", OwnedBy: "meta", Provider: "fireworks", Name: "Llama 3.3 70B Instruct", ContextLen: 131072},
+		{ID: "fireworks/llama-v3p1-405b-instruct", Object: "model", OwnedBy: "meta", Provider: "fireworks", Name: "Llama 3.1 405B Instruct", ContextLen: 131072},
+		{ID: "fireworks/deepseek-v3", Object: "model", OwnedBy: "deepseek", Provider: "fireworks", Name: "DeepSeek V3", ContextLen: 128000},
+		{ID: "fireworks/qwen2p5-72b-instruct", Object: "model", OwnedBy: "qwen", Provider: "fireworks", Name: "Qwen 2.5 72B Instruct", ContextLen: 131072},
+		{ID: "fireworks/qwen3-coder-480b-a35b", Object: "model", OwnedBy: "qwen", Provider: "fireworks", Name: "Qwen3 Coder 480B A35B", ContextLen: 262144},
+		{ID: "fireworks/openai-gpt-oss-120b", Object: "model", OwnedBy: "openai", Provider: "fireworks", Name: "GPT-OSS 120B", ContextLen: 131072},
+		{ID: "fireworks/openai-gpt-oss-20b", Object: "model", OwnedBy: "openai", Provider: "fireworks", Name: "GPT-OSS 20B", ContextLen: 131072},
+		{ID: "fireworks/glm-4.5", Object: "model", OwnedBy: "zhipu", Provider: "fireworks", Name: "GLM 4.5", ContextLen: 131072},
+		{ID: "fireworks/kimi-k2-instruct", Object: "model", OwnedBy: "moonshot", Provider: "fireworks", Name: "Kimi K2 Instruct", ContextLen: 131072},
+		{ID: "fireworks/mistral-large-3", Object: "model", OwnedBy: "mistral", Provider: "fireworks", Name: "Mistral Large 3", ContextLen: 131072},
+		{ID: "fireworks/mixtral-8x22b-instruct", Object: "model", OwnedBy: "mistral", Provider: "fireworks", Name: "Mixtral 8x22B", ContextLen: 65536},
+		{ID: "fireworks/gemma-2-9b-it", Object: "model", OwnedBy: "google", Provider: "fireworks", Name: "Gemma 2 9B", ContextLen: 8192},
 	}
 
 	response := ModelsListResponse{

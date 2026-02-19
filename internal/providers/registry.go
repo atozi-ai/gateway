@@ -14,6 +14,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/providers/anthropic"
 	"github.com/atozi-ai/gateway/internal/providers/azure"
 	"github.com/atozi-ai/gateway/internal/providers/deepseek"
+	"github.com/atozi-ai/gateway/internal/providers/fireworks"
 	"github.com/atozi-ai/gateway/internal/providers/gemini"
 	"github.com/atozi-ai/gateway/internal/providers/groq"
 	"github.com/atozi-ai/gateway/internal/providers/mistral"
@@ -174,6 +175,8 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 		baseProvider = mistral.New()
 	case "together":
 		baseProvider = together.New()
+	case "fireworks":
+		baseProvider = fireworks.New()
 	default:
 		return nil, &llm.ProviderError{
 			StatusCode: 400,
