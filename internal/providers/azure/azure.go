@@ -9,28 +9,44 @@ import (
 
 // Provider implements llm.Provider for the OpenAI API.
 type Provider struct {
-	client *openaicompat.Client
+	apiKey   string
+	endpoint string
 }
 
-// New creates an Azure provider with the given API key and endpoint.
 func New(apiKey string, endpoint string) *Provider {
 	return &Provider{
-		client: openaicompat.NewClient(openaicompat.Config{
-			BaseURL: endpoint,
-			APIKey:  apiKey,
-			Headers: map[string]string{
-				"api-key": apiKey,
-			},
-		}),
+		apiKey:   apiKey,
+		endpoint: endpoint,
 	}
 }
 
 func (p *Provider) Name() string { return "azure" }
 
 func (p *Provider) Chat(ctx context.Context, req llm.ChatRequest) (*llm.ChatResponse, error) {
-	return p.client.Chat(ctx, req)
+	client := p.getClient(req)
+	return client.Chat(ctx, req)
 }
 
 func (p *Provider) ChatStream(ctx context.Context, req llm.ChatRequest, callback func(*llm.StreamChunk) error) error {
-	return p.client.ChatStream(ctx, req, callback)
+	client := p.getClient(req)
+	return client.ChatStream(ctx, req, callback)
+}
+
+func (p *Provider) getClient(req llm.ChatRequest) *openaicompat.Client {
+	endpoint := p.endpoint
+	if req.Options.AzureEndpoint != nil && *req.Options.AzureEndpoint != "" {
+		endpoint = *req.Options.AzureEndpoint
+	}
+
+	if endpoint == "" {
+		panic("Azure endpoint is required. Provide azure_endpoint in request options")
+	}
+
+	return openaicompat.NewClient(openaicompat.Config{
+		BaseURL: endpoint,
+		APIKey:  p.apiKey,
+		Headers: map[string]string{
+			"api-key": p.apiKey,
+		},
+	})
 }
