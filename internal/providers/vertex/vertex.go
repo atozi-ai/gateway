@@ -21,14 +21,8 @@ type Provider struct {
 }
 
 func New(projectID, location string) *Provider {
-	if projectID == "" {
-		projectID = os.Getenv("GOOGLE_PROJECT_ID")
-	}
 	if location == "" {
-		location = os.Getenv("GOOGLE_LOCATION")
-		if location == "" {
-			location = "us-central1"
-		}
+		location = "us-central1"
 	}
 	return &Provider{
 		projectID: projectID,
@@ -42,6 +36,25 @@ func New(projectID, location string) *Provider {
 func (p *Provider) Name() string { return "vertex" }
 
 func (p *Provider) Chat(ctx context.Context, req llm.ChatRequest) (*llm.ChatResponse, error) {
+	projectID := p.projectID
+	location := p.location
+
+	if req.Options.GCPProjectID != nil && *req.Options.GCPProjectID != "" {
+		projectID = *req.Options.GCPProjectID
+	}
+	if req.Options.GCPLocation != nil && *req.Options.GCPLocation != "" {
+		location = *req.Options.GCPLocation
+	}
+
+	if projectID == "" {
+		return nil, &llm.ProviderError{
+			StatusCode: 400,
+			Message:    "GCP project ID required. Provide gcp_project_id in request options",
+			Type:       "invalid_request_error",
+			Code:       "missing_gcp_project_id",
+		}
+	}
+
 	reqBody := convertToVertexRequest(req)
 	body, err := json.Marshal(reqBody)
 	if err != nil {
@@ -57,7 +70,7 @@ func (p *Provider) Chat(ctx context.Context, req llm.ChatRequest) (*llm.ChatResp
 	}
 
 	url := fmt.Sprintf("https://%s-aiplatform.googleapis.com/v1/projects/%s/locations/%s/endpoints/%s/openapi",
-		p.location, p.projectID, p.location, modelName)
+		location, projectID, location, modelName)
 
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(body))
 	if err != nil {
