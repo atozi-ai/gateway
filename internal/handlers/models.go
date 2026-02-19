@@ -187,6 +187,14 @@ func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 		{ID: "upstage/solar-pro-2", Object: "model", OwnedBy: "upstage", Provider: "upstage", Name: "Solar Pro 2", ContextLen: 128000},
 		{ID: "upstage/solar-mini", Object: "model", OwnedBy: "upstage", Provider: "upstage", Name: "Solar Mini", ContextLen: 128000},
 		{ID: "upstage/solar-open", Object: "model", OwnedBy: "upstage", Provider: "upstage", Name: "Solar Open", ContextLen: 128000},
+
+		// Moonshot AI (Kimi) Models - Latest 2025-2026
+		{ID: "moonshot/kimi-k2.5", Object: "model", OwnedBy: "moonshot", Provider: "moonshot", Name: "Kimi K2.5", ContextLen: 262144},
+		{ID: "moonshot/kimi-k2", Object: "model", OwnedBy: "moonshot", Provider: "moonshot", Name: "Kimi K2", ContextLen: 262144},
+		{ID: "moonshot/kimi-k1.5", Object: "model", OwnedBy: "moonshot", Provider: "moonshot", Name: "Kimi K1.5", ContextLen: 262144},
+		{ID: "moonshot/kimi-v1-8k", Object: "model", OwnedBy: "moonshot", Provider: "moonshot", Name: "Kimi v1 8K", ContextLen: 8192},
+		{ID: "moonshot/kimi-v1-32k", Object: "model", OwnedBy: "moonshot", Provider: "moonshot", Name: "Kimi v1 32K", ContextLen: 32768},
+		{ID: "moonshot/kimi-v1-128k", Object: "model", OwnedBy: "moonshot", Provider: "moonshot", Name: "Kimi v1 128K", ContextLen: 131072},
 	}
 
 	response := ModelsListResponse{
