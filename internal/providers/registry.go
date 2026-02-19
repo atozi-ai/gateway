@@ -13,6 +13,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/platform/logger"
 	"github.com/atozi-ai/gateway/internal/providers/anthropic"
 	"github.com/atozi-ai/gateway/internal/providers/azure"
+	"github.com/atozi-ai/gateway/internal/providers/deepseek"
 	"github.com/atozi-ai/gateway/internal/providers/gemini"
 	"github.com/atozi-ai/gateway/internal/providers/openai"
 	"github.com/atozi-ai/gateway/internal/providers/xai"
@@ -162,6 +163,8 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 		baseProvider = anthropic.New()
 	case "gemini":
 		baseProvider = gemini.New()
+	case "deepseek":
+		baseProvider = deepseek.New()
 	default:
 		return nil, &llm.ProviderError{
 			StatusCode: 400,
