@@ -261,6 +261,10 @@ func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 		{ID: "cerebras/llama-4-maverick", Object: "model", OwnedBy: "meta", Provider: "cerebras", Name: "Llama 4 Maverick", ContextLen: 131072},
 		{ID: "cerebras/llama-3.3-70b", Object: "model", OwnedBy: "meta", Provider: "cerebras", Name: "Llama 3.3 70B", ContextLen: 131072},
 		{ID: "cerebras/llama-3.1-405b", Object: "model", OwnedBy: "meta", Provider: "cerebras", Name: "Llama 3.1 405B", ContextLen: 131072},
+
+		// Baseten Models - Latest 2025-2026
+		{ID: "baseten/llama-3.3-70b", Object: "model", OwnedBy: "meta", Provider: "baseten", Name: "Llama 3.3 70B", ContextLen: 131072},
+		{ID: "baseten/qwen-2.5-72b", Object: "model", OwnedBy: "qwen", Provider: "baseten", Name: "Qwen 2.5 72B", ContextLen: 131072},
 	}
 
 	response := ModelsListResponse{
