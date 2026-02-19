@@ -491,6 +491,18 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if len(choices) == 0 && resp.Content != "" {
+		finishReason := "stop"
+		choices = []ChoicePayload{{
+			Index:        0,
+			FinishReason: finishReason,
+			Message: MessagePayload{
+				Role:    "assistant",
+				Content: resp.Content,
+			},
+		}}
+	}
+
 	var usage *UsagePayload
 	if parsedResponse.Usage != nil {
 		var promptDetails *TokensDetailsPayload

@@ -27,10 +27,15 @@ func (c *Client) Chat(ctx context.Context, req llm.ChatRequest) (*llm.ChatRespon
 	}
 
 	log := logger.FromContext(ctx)
-	log.Info().Str("model", req.Model).Msg("Using Gemini Model")
 
 	model := strings.TrimPrefix(req.Model, "gemini/")
 	url := c.endpoint(model)
+
+	log.Info().
+		Str("model", model).
+		Str("url", url).
+		Str("body", string(jsonBody)).
+		Msg("Using Gemini Model")
 
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(jsonBody))
 	if err != nil {
@@ -48,6 +53,11 @@ func (c *Client) Chat(ctx context.Context, req llm.ChatRequest) (*llm.ChatRespon
 	if err != nil {
 		return nil, llm.NewInternalError(fmt.Sprintf("failed to read response: %v", err))
 	}
+
+	log.Info().
+		Int("status", resp.StatusCode).
+		Str("response", string(respBody)).
+		Msg("Gemini response")
 
 	if err := checkError(resp.StatusCode, respBody); err != nil {
 		return nil, err
