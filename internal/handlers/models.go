@@ -280,6 +280,18 @@ func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 		{ID: "friendli/deepseek-v3", Object: "model", OwnedBy: "deepseek", Provider: "friendli", Name: "DeepSeek V3", ContextLen: 128000},
 		{ID: "friendli/qwen-2.5-72b", Object: "model", OwnedBy: "qwen", Provider: "friendli", Name: "Qwen 2.5 72B", ContextLen: 131072},
 
+		// Venice AI Models - Latest 2025-2026
+		{ID: "venice/llama-3.3-70b", Object: "model", OwnedBy: "meta", Provider: "venice", Name: "Llama 3.3 70B", ContextLen: 131072},
+		{ID: "venice/qwen-2.5-72b", Object: "model", OwnedBy: "qwen", Provider: "venice", Name: "Qwen 2.5 72B", ContextLen: 131072},
+
+		// OVHCloud AI Models - Latest 2025-2026
+		{ID: "ovhcloud/llama-3.3-70b", Object: "model", OwnedBy: "meta", Provider: "ovhcloud", Name: "Llama 3.3 70B", ContextLen: 131072},
+		{ID: "ovhcloud/qwen-2.5-72b", Object: "model", OwnedBy: "qwen", Provider: "ovhcloud", Name: "Qwen 2.5 72B", ContextLen: 131072},
+
+		// Scaleway AI Models - Latest 2025-2026
+		{ID: "scaleway/llama-3.3-70b", Object: "model", OwnedBy: "meta", Provider: "scaleway", Name: "Llama 3.3 70B", ContextLen: 131072},
+		{ID: "scaleway/qwen-2.5-72b", Object: "model", OwnedBy: "qwen", Provider: "scaleway", Name: "Qwen 2.5 72B", ContextLen: 131072},
+
 		// Cloudflare Workers AI Models - Latest 2025-2026
 		{ID: "cloudflare/llama-3.1-8b", Object: "model", OwnedBy: "meta", Provider: "cloudflare", Name: "Llama 3.1 8B", ContextLen: 128000},
 		{ID: "cloudflare/llama-3.2-1b", Object: "model", OwnedBy: "meta", Provider: "cloudflare", Name: "Llama 3.2 1B", ContextLen: 128000},

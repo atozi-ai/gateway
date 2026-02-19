@@ -34,12 +34,15 @@ import (
 	"github.com/atozi-ai/gateway/internal/providers/nvidia"
 	"github.com/atozi-ai/gateway/internal/providers/ollama"
 	"github.com/atozi-ai/gateway/internal/providers/openai"
+	"github.com/atozi-ai/gateway/internal/providers/ovhcloud"
 	"github.com/atozi-ai/gateway/internal/providers/perplexity"
 	"github.com/atozi-ai/gateway/internal/providers/replicate"
 	"github.com/atozi-ai/gateway/internal/providers/sambanova"
+	"github.com/atozi-ai/gateway/internal/providers/scaleway"
 	"github.com/atozi-ai/gateway/internal/providers/siliconflow"
 	"github.com/atozi-ai/gateway/internal/providers/together"
 	"github.com/atozi-ai/gateway/internal/providers/upstage"
+	"github.com/atozi-ai/gateway/internal/providers/venice"
 	"github.com/atozi-ai/gateway/internal/providers/xai"
 	"github.com/atozi-ai/gateway/internal/providers/zai"
 	"github.com/atozi-ai/gateway/internal/retry"
@@ -215,6 +218,8 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 		baseProvider = nebius.New()
 	case "nvidia":
 		baseProvider = nvidia.New()
+	case "ovhcloud":
+		baseProvider = ovhcloud.New()
 	case "together":
 		baseProvider = together.New()
 	case "upstage":
@@ -229,6 +234,10 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 		baseProvider = replicate.New()
 	case "sambanova":
 		baseProvider = sambanova.New()
+	case "scaleway":
+		baseProvider = scaleway.New()
+	case "venice":
+		baseProvider = venice.New()
 	case "cohere":
 		baseProvider = cohere.New()
 	case "novita":
