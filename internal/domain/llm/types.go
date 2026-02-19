@@ -68,9 +68,10 @@ type ChatOptions struct {
 	StreamOptions *StreamOptions
 
 	// AWS credentials for Bedrock
-	AWSAccessKeyID     *string
-	AWSSecretAccessKey *string
-	AWSRegion          *string
+	AWSAccessKeyID         *string
+	AWSSecretAccessKey     *string
+	AWSRegion              *string
+	AWSInferenceProfileARN *string
 
 	// GCP credentials for Vertex AI
 	GCPProjectID *string

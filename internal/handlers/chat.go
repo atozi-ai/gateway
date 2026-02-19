@@ -59,9 +59,10 @@ type ChatOptionsPayload struct {
 	IncludeAccumulated *bool                 `json:"includeAccumulated,omitempty"`
 
 	// AWS credentials for Bedrock
-	AWSAccessKeyID     *string `json:"awsAccessKeyID,omitempty"`
-	AWSSecretAccessKey *string `json:"awsSecretAccessKey,omitempty"`
-	AWSRegion          *string `json:"awsRegion,omitempty"`
+	AWSAccessKeyID         *string `json:"awsAccessKeyID,omitempty"`
+	AWSSecretAccessKey     *string `json:"awsSecretAccessKey,omitempty"`
+	AWSRegion              *string `json:"awsRegion,omitempty"`
+	AWSInferenceProfileARN *string `json:"awsInferenceProfileARN,omitempty"`
 
 	// GCP credentials for Vertex AI
 	GCPProjectID *string `json:"gcpProjectID,omitempty"`
@@ -299,9 +300,10 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 			ParallelToolCalls: payload.Options.ParallelToolCalls,
 
 			// AWS credentials for Bedrock
-			AWSAccessKeyID:     payload.Options.AWSAccessKeyID,
-			AWSSecretAccessKey: payload.Options.AWSSecretAccessKey,
-			AWSRegion:          payload.Options.AWSRegion,
+			AWSAccessKeyID:         payload.Options.AWSAccessKeyID,
+			AWSSecretAccessKey:     payload.Options.AWSSecretAccessKey,
+			AWSRegion:              payload.Options.AWSRegion,
+			AWSInferenceProfileARN: payload.Options.AWSInferenceProfileARN,
 
 			// GCP credentials for Vertex AI
 			GCPProjectID: payload.Options.GCPProjectID,
