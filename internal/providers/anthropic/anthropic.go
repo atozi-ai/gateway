@@ -13,10 +13,10 @@ type Provider struct {
 	client *anthropic_compat.Client
 }
 
-func New(apiKey string) *Provider {
+func New() *Provider {
 	return &Provider{
 		client: anthropic_compat.NewClient(anthropic_compat.Config{
-			APIKey: apiKey,
+			APIKey: "",
 		}),
 	}
 }

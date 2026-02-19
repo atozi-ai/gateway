@@ -14,12 +14,12 @@ type Provider struct {
 	client *openaicompat.Client
 }
 
-// New creates an Z.ai provider with the given API key.
-func New(apiKey string) *Provider {
+// New creates a Z.ai provider.
+func New() *Provider {
 	return &Provider{
 		client: openaicompat.NewClient(openaicompat.Config{
 			BaseURL: baseURL,
-			APIKey:  apiKey,
+			APIKey:  "",
 		}),
 	}
 }
