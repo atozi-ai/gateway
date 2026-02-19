@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/atozi-ai/gateway/internal/domain/llm"
-	"github.com/atozi-ai/gateway/internal/platform/logger"
 )
 
 const (
@@ -26,16 +25,8 @@ func (c *Client) Chat(ctx context.Context, req llm.ChatRequest) (*llm.ChatRespon
 		return nil, llm.NewInternalError(fmt.Sprintf("failed to marshal request: %v", err))
 	}
 
-	log := logger.FromContext(ctx)
-
 	model := strings.TrimPrefix(req.Model, "gemini/")
 	url := c.endpoint(model)
-
-	log.Info().
-		Str("model", model).
-		Str("url", url).
-		Str("body", string(jsonBody)).
-		Msg("Using Gemini Model")
 
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(jsonBody))
 	if err != nil {
@@ -53,11 +44,6 @@ func (c *Client) Chat(ctx context.Context, req llm.ChatRequest) (*llm.ChatRespon
 	if err != nil {
 		return nil, llm.NewInternalError(fmt.Sprintf("failed to read response: %v", err))
 	}
-
-	log.Info().
-		Int("status", resp.StatusCode).
-		Str("response", string(respBody)).
-		Msg("Gemini response")
 
 	if err := checkError(resp.StatusCode, respBody); err != nil {
 		return nil, err
@@ -85,9 +71,6 @@ func (c *Client) ChatStream(ctx context.Context, req llm.ChatRequest, callback f
 	if err != nil {
 		return llm.NewInternalError(fmt.Sprintf("failed to marshal request: %v", err))
 	}
-
-	log := logger.FromContext(ctx)
-	log.Info().Str("model", req.Model).Msg("Using Gemini Model for streaming")
 
 	model := strings.TrimPrefix(req.Model, "gemini/")
 	url := c.streamEndpoint(model)
@@ -162,8 +145,6 @@ func readSSEStream(ctx context.Context, r io.Reader, callback func(*llm.StreamCh
 	buf := make([]byte, 0, bufio.MaxScanTokenSize)
 	scanner.Buffer(buf, maxScanTokenSize)
 
-	log := logger.FromContext(ctx)
-
 	for scanner.Scan() {
 		select {
 		case <-ctx.Done():
@@ -189,7 +170,6 @@ func readSSEStream(ctx context.Context, r io.Reader, callback func(*llm.StreamCh
 
 		var chunk map[string]interface{}
 		if err := json.Unmarshal([]byte(data), &chunk); err != nil {
-			log.Warn().Err(err).Str("data", data).Msg("Failed to parse SSE chunk")
 			continue
 		}
 
