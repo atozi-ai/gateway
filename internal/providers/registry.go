@@ -14,9 +14,11 @@ import (
 	"github.com/atozi-ai/gateway/internal/providers/ai21"
 	"github.com/atozi-ai/gateway/internal/providers/anthropic"
 	"github.com/atozi-ai/gateway/internal/providers/anyscale"
+	"github.com/atozi-ai/gateway/internal/providers/arcee"
 	"github.com/atozi-ai/gateway/internal/providers/azure"
 	"github.com/atozi-ai/gateway/internal/providers/baseten"
 	"github.com/atozi-ai/gateway/internal/providers/cerebras"
+	"github.com/atozi-ai/gateway/internal/providers/chutes"
 	"github.com/atozi-ai/gateway/internal/providers/cloudflare"
 	"github.com/atozi-ai/gateway/internal/providers/cohere"
 	"github.com/atozi-ai/gateway/internal/providers/deepinfra"
@@ -29,14 +31,19 @@ import (
 	"github.com/atozi-ai/gateway/internal/providers/liquid"
 	"github.com/atozi-ai/gateway/internal/providers/minimax"
 	"github.com/atozi-ai/gateway/internal/providers/mistral"
+	"github.com/atozi-ai/gateway/internal/providers/modelrun"
 	"github.com/atozi-ai/gateway/internal/providers/moonshot"
+	"github.com/atozi-ai/gateway/internal/providers/morph"
 	"github.com/atozi-ai/gateway/internal/providers/nebius"
+	"github.com/atozi-ai/gateway/internal/providers/nextbit"
 	"github.com/atozi-ai/gateway/internal/providers/novita"
 	"github.com/atozi-ai/gateway/internal/providers/nvidia"
 	"github.com/atozi-ai/gateway/internal/providers/ollama"
 	"github.com/atozi-ai/gateway/internal/providers/openai"
 	"github.com/atozi-ai/gateway/internal/providers/ovhcloud"
+	"github.com/atozi-ai/gateway/internal/providers/parasail"
 	"github.com/atozi-ai/gateway/internal/providers/perplexity"
+	"github.com/atozi-ai/gateway/internal/providers/phala"
 	"github.com/atozi-ai/gateway/internal/providers/replicate"
 	"github.com/atozi-ai/gateway/internal/providers/sambanova"
 	"github.com/atozi-ai/gateway/internal/providers/scaleway"
@@ -255,6 +262,20 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 		baseProvider = xiaomi.New()
 	case "liquid":
 		baseProvider = liquid.New()
+	case "arcee":
+		baseProvider = arcee.New()
+	case "chutes":
+		baseProvider = chutes.New()
+	case "morph":
+		baseProvider = morph.New()
+	case "nextbit":
+		baseProvider = nextbit.New()
+	case "parasail":
+		baseProvider = parasail.New()
+	case "phala":
+		baseProvider = phala.New()
+	case "modelrun":
+		baseProvider = modelrun.New()
 	default:
 		return nil, &llm.ProviderError{
 			StatusCode: 400,

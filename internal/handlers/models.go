@@ -8,12 +8,15 @@ import (
 )
 
 type ModelInfo struct {
-	ID         string `json:"id"`
-	Object     string `json:"object"`
-	OwnedBy    string `json:"owned_by"`
-	Provider   string `json:"provider"`
-	Name       string `json:"name"`
-	ContextLen int    `json:"context_len"`
+	ID          string   `json:"id"`
+	Object      string   `json:"object"`
+	OwnedBy     string   `json:"owned_by"`
+	Provider    string   `json:"provider"`
+	Name        string   `json:"name"`
+	ContextLen  int      `json:"context_len"`
+	Description string   `json:"description,omitempty"`
+	Category    []string `json:"category,omitempty"`
+	IsFlagship  bool     `json:"is_flagship,omitempty"`
 }
 
 type ModelsListResponse struct {
@@ -30,22 +33,22 @@ func NewModelsHandler() *ModelsHandler {
 func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 	models := []ModelInfo{
 		// OpenAI Models - Latest 2025-2026
-		{ID: "openai/gpt-5.2", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "GPT-5.2", ContextLen: 256000},
-		{ID: "openai/gpt-4.5", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "GPT-4.5", ContextLen: 128000},
-		{ID: "openai/gpt-4.1", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "GPT-4.1", ContextLen: 200000},
-		{ID: "openai/gpt-4.1-mini", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "GPT-4.1 Mini", ContextLen: 200000},
-		{ID: "openai/gpt-4o", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "GPT-4o", ContextLen: 128000},
-		{ID: "openai/gpt-4o-mini", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "GPT-4o Mini", ContextLen: 128000},
-		{ID: "openai/o1", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "o1", ContextLen: 200000},
-		{ID: "openai/o1-mini", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "o1 Mini", ContextLen: 128000},
-		{ID: "openai/o3", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "o3", ContextLen: 200000},
-		{ID: "openai/o3-mini", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "o3 Mini", ContextLen: 200000},
-		{ID: "openai/o4-mini", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "o4 Mini", ContextLen: 200000},
-		{ID: "openai/gpt-4-turbo", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "GPT-4 Turbo", ContextLen: 128000},
-		{ID: "openai/gpt-4", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "GPT-4", ContextLen: 8192},
-		{ID: "openai/gpt-3.5-turbo", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "GPT-3.5 Turbo", ContextLen: 16385},
-		{ID: "openai/gpt-oss-120b", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "GPT-OSS 120B", ContextLen: 128000},
-		{ID: "openai/gpt-oss-20b", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "GPT-OSS 20B", ContextLen: 128000},
+		{ID: "openai/gpt-5.2", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "GPT-5.2", ContextLen: 256000, Description: "OpenAI's latest flagship model", Category: []string{"general", "coding", "reasoning"}, IsFlagship: true},
+		{ID: "openai/gpt-4.5", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "GPT-4.5", ContextLen: 128000, Description: "OpenAI's previous flagship model", Category: []string{"general", "coding"}},
+		{ID: "openai/gpt-4.1", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "GPT-4.1", ContextLen: 200000, Description: "High-capability instruction following", Category: []string{"general", "coding"}},
+		{ID: "openai/gpt-4.1-mini", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "GPT-4.1 Mini", ContextLen: 200000, Description: "Efficient instruction following", Category: []string{"general"}},
+		{ID: "openai/gpt-4o", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "GPT-4o", ContextLen: 128000, Description: "Omni multimodal model", Category: []string{"general", "vision"}, IsFlagship: true},
+		{ID: "openai/gpt-4o-mini", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "GPT-4o Mini", ContextLen: 128000, Description: "Fast multimodal model", Category: []string{"general", "vision"}},
+		{ID: "openai/o1", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "o1", ContextLen: 200000, Description: "Advanced reasoning model", Category: []string{"reasoning"}, IsFlagship: true},
+		{ID: "openai/o1-mini", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "o1 Mini", ContextLen: 128000, Description: "Fast reasoning model", Category: []string{"reasoning"}},
+		{ID: "openai/o3", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "o3", ContextLen: 200000, Description: "Next-gen reasoning model", Category: []string{"reasoning"}, IsFlagship: true},
+		{ID: "openai/o3-mini", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "o3 Mini", ContextLen: 200000, Description: "Efficient reasoning model", Category: []string{"reasoning"}},
+		{ID: "openai/o4-mini", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "o4 Mini", ContextLen: 200000, Description: "Compact reasoning model", Category: []string{"reasoning"}},
+		{ID: "openai/gpt-4-turbo", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "GPT-4 Turbo", ContextLen: 128000, Description: "Fast GPT-4 variant", Category: []string{"general", "coding"}},
+		{ID: "openai/gpt-4", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "GPT-4", ContextLen: 8192, Description: "Previous flagship model", Category: []string{"general", "coding"}},
+		{ID: "openai/gpt-3.5-turbo", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "GPT-3.5 Turbo", ContextLen: 16385, Description: "Fast and efficient model", Category: []string{"general"}},
+		{ID: "openai/gpt-oss-120b", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "GPT-OSS 120B", ContextLen: 128000, Description: "Open-weight flagship model", Category: []string{"general", "open_weights"}, IsFlagship: true},
+		{ID: "openai/gpt-oss-20b", Object: "model", OwnedBy: "openai", Provider: "openai", Name: "GPT-OSS 20B", ContextLen: 128000, Description: "Open-weight efficient model", Category: []string{"general", "open_weights"}},
 
 		// xAI Grok Models - Latest 2025-2026
 		{ID: "xai/grok-4", Object: "model", OwnedBy: "xai", Provider: "xai", Name: "Grok 4", ContextLen: 256000},
@@ -301,6 +304,27 @@ func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 
 		// Liquid AI Models - Latest 2025-2026
 		{ID: "liquid/liquid-1", Object: "model", OwnedBy: "liquid", Provider: "liquid", Name: "Liquid 1", ContextLen: 131072},
+
+		// Arcee AI Models
+		{ID: "arcee/arity-falcon", Object: "model", OwnedBy: "arcee", Provider: "arcee", Name: "Arity Falcon", ContextLen: 131072, Description: "Enterprise-focused language model", Category: []string{"general", "enterprise"}, IsFlagship: true},
+
+		// Chutes AI Models
+		{ID: "chutes/llama-3.3-70b", Object: "model", OwnedBy: "meta", Provider: "chutes", Name: "Llama 3.3 70B", ContextLen: 131072, Description: "Multilingual large language model", Category: []string{"general"}, IsFlagship: true},
+
+		// Morph AI Models
+		{ID: "morph/llama-3.1-70b", Object: "model", OwnedBy: "meta", Provider: "morph", Name: "Llama 3.1 70B", ContextLen: 131072, Description: "Instruction-following conversational model", Category: []string{"general"}},
+
+		// NextBit Models
+		{ID: "nextbit/llama-3.1-8b", Object: "model", OwnedBy: "meta", Provider: "nextbit", Name: "Llama 3.1 8B", ContextLen: 131072, Description: "Efficient instruction-following model", Category: []string{"general"}},
+
+		// Parasail Models
+		{ID: "parasail/llama-3.3-70b", Object: "model", OwnedBy: "meta", Provider: "parasail", Name: "Llama 3.3 70B", ContextLen: 131072, Description: "High-performance multilingual model", Category: []string{"general"}, IsFlagship: true},
+
+		// Phala Network Models
+		{ID: "phala/llama-3.1-70b", Object: "model", OwnedBy: "meta", Provider: "phala", Name: "Llama 3.1 70B", ContextLen: 131072, Description: "Privacy-focused inference", Category: []string{"general"}},
+
+		// ModelRun Models
+		{ID: "modelrun/llama-3.1-8b", Object: "model", OwnedBy: "meta", Provider: "modelrun", Name: "Llama 3.1 8B", ContextLen: 131072, Description: "Fast inference model", Category: []string{"general"}},
 
 		// Cloudflare Workers AI Models - Latest 2025-2026
 		{ID: "cloudflare/llama-3.1-8b", Object: "model", OwnedBy: "meta", Provider: "cloudflare", Name: "Llama 3.1 8B", ContextLen: 128000},
