@@ -11,6 +11,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/domain/llm"
 	"github.com/atozi-ai/gateway/internal/failover"
 	"github.com/atozi-ai/gateway/internal/platform/logger"
+	"github.com/atozi-ai/gateway/internal/providers/anthropic"
 	"github.com/atozi-ai/gateway/internal/providers/azure"
 	"github.com/atozi-ai/gateway/internal/providers/openai"
 	"github.com/atozi-ai/gateway/internal/providers/xai"
@@ -156,6 +157,8 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 		baseProvider = xai.New("")
 	case "zai":
 		baseProvider = zai.New("")
+	case "anthropic":
+		baseProvider = anthropic.New("")
 	default:
 		return nil, &llm.ProviderError{
 			StatusCode: 400,
