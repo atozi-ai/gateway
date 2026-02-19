@@ -292,6 +292,16 @@ func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 		{ID: "scaleway/llama-3.3-70b", Object: "model", OwnedBy: "meta", Provider: "scaleway", Name: "Llama 3.3 70B", ContextLen: 131072},
 		{ID: "scaleway/qwen-2.5-72b", Object: "model", OwnedBy: "qwen", Provider: "scaleway", Name: "Qwen 2.5 72B", ContextLen: 131072},
 
+		// StepFun Models - Latest 2025-2026
+		{ID: "stepfun/step-1v", Object: "model", OwnedBy: "stepfun", Provider: "stepfun", Name: "Step 1V", ContextLen: 131072},
+		{ID: "stepfun/step-1", Object: "model", OwnedBy: "stepfun", Provider: "stepfun", Name: "Step 1", ContextLen: 131072},
+
+		// Xiaomi MiMo Models - Latest 2025-2026
+		{ID: "xiaomi/mimo", Object: "model", OwnedBy: "xiaomi", Provider: "xiaomi", Name: "MiMo", ContextLen: 131072},
+
+		// Liquid AI Models - Latest 2025-2026
+		{ID: "liquid/liquid-1", Object: "model", OwnedBy: "liquid", Provider: "liquid", Name: "Liquid 1", ContextLen: 131072},
+
 		// Cloudflare Workers AI Models - Latest 2025-2026
 		{ID: "cloudflare/llama-3.1-8b", Object: "model", OwnedBy: "meta", Provider: "cloudflare", Name: "Llama 3.1 8B", ContextLen: 128000},
 		{ID: "cloudflare/llama-3.2-1b", Object: "model", OwnedBy: "meta", Provider: "cloudflare", Name: "Llama 3.2 1B", ContextLen: 128000},
