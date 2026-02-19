@@ -265,6 +265,12 @@ func (h *ModelsHandler) ListModels(w http.ResponseWriter, r *http.Request) {
 		// Baseten Models - Latest 2025-2026
 		{ID: "baseten/llama-3.3-70b", Object: "model", OwnedBy: "meta", Provider: "baseten", Name: "Llama 3.3 70B", ContextLen: 131072},
 		{ID: "baseten/qwen-2.5-72b", Object: "model", OwnedBy: "qwen", Provider: "baseten", Name: "Qwen 2.5 72B", ContextLen: 131072},
+
+		// Cloudflare Workers AI Models - Latest 2025-2026
+		{ID: "cloudflare/llama-3.1-8b", Object: "model", OwnedBy: "meta", Provider: "cloudflare", Name: "Llama 3.1 8B", ContextLen: 128000},
+		{ID: "cloudflare/llama-3.2-1b", Object: "model", OwnedBy: "meta", Provider: "cloudflare", Name: "Llama 3.2 1B", ContextLen: 128000},
+		{ID: "cloudflare/qwen-2.5-7b", Object: "model", OwnedBy: "qwen", Provider: "cloudflare", Name: "Qwen 2.5 7B", ContextLen: 128000},
+		{ID: "cloudflare/gemma-2-2b", Object: "model", OwnedBy: "google", Provider: "cloudflare", Name: "Gemma 2 2B", ContextLen: 128000},
 	}
 
 	response := ModelsListResponse{
