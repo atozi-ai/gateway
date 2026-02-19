@@ -15,6 +15,7 @@ import (
 	"github.com/atozi-ai/gateway/internal/providers/anthropic"
 	"github.com/atozi-ai/gateway/internal/providers/anyscale"
 	"github.com/atozi-ai/gateway/internal/providers/arcee"
+	"github.com/atozi-ai/gateway/internal/providers/aws_bedrock"
 	"github.com/atozi-ai/gateway/internal/providers/azure"
 	"github.com/atozi-ai/gateway/internal/providers/baseten"
 	"github.com/atozi-ai/gateway/internal/providers/cerebras"
@@ -182,6 +183,8 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 	switch name {
 	case "openai":
 		baseProvider = openai.New()
+	case "ai21":
+		baseProvider = ai21.New()
 	case "azure":
 		if endpoint == "" {
 			return nil, &llm.ProviderError{
@@ -192,8 +195,12 @@ func (m *ProviderManager) getProvider(name string, endpoint string, enableRetry 
 			}
 		}
 		baseProvider = azure.New("", endpoint)
-	case "ai21":
-		baseProvider = ai21.New()
+	case "aws_bedrock":
+		region := os.Getenv("AWS_REGION")
+		if region == "" {
+			region = "us-east-1"
+		}
+		baseProvider = aws_bedrock.New(os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), region)
 	case "baseten":
 		baseProvider = baseten.New()
 	case "anyscale":
