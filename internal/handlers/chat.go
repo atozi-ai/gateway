@@ -699,12 +699,14 @@ func (h *ChatHandler) handleStreamingChat(
 		}
 
 		streamResponse := ChatResponsePayload{
-			ID:      chunk.ID,
-			Object:  chunk.Object,
-			Created: chunk.Created,
-			Model:   chunk.Model,
-			Choices: choices,
-			Usage:   usage,
+			ID:                chunk.ID,
+			Object:            chunk.Object,
+			Created:           chunk.Created,
+			Model:             chunk.Model,
+			SystemFingerprint: chunk.SystemFingerprint,
+			Choices:           choices,
+			Usage:             usage,
+			ServiceTier:       chunk.ServiceTier,
 		}
 
 		if includeAccumulated {

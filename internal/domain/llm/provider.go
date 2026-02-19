@@ -3,13 +3,15 @@ package llm
 import "context"
 
 type StreamChunk struct {
-	ID      string
-	Object  string
-	Created int64
-	Model   string
-	Choices []StreamChoice
-	Usage   *Usage
-	Raw     []byte // Raw JSON chunk
+	ID                string
+	Object            string
+	Created           int64
+	Model             string
+	Choices           []StreamChoice
+	Usage             *Usage
+	Raw               []byte // Raw JSON chunk
+	SystemFingerprint *string
+	ServiceTier       *string
 }
 
 type StreamChoice struct {

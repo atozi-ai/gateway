@@ -70,11 +70,15 @@ func (c *Client) setHeaders(req *http.Request, apiKey string) {
 	}
 
 	// Skip Authorization header if api-key header is provided (e.g., Azure)
-	if _, hasAPIKey := c.cfg.Headers["api-key"]; !hasAPIKey {
+	if _, hasAPIKey := c.cfg.Headers["api-key"]; hasAPIKey {
+		req.Header.Set("api-key", key)
+	} else {
 		req.Header.Set("Authorization", "Bearer "+key)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	for k, v := range c.cfg.Headers {
-		req.Header.Set(k, v)
+		if k != "api-key" { // Skip api-key as we set it above
+			req.Header.Set(k, v)
+		}
 	}
 }

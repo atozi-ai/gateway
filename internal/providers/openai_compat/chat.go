@@ -212,11 +212,13 @@ func parseStreamChunk(data []byte) (*llm.StreamChunk, error) {
 	}
 
 	chunk := &llm.StreamChunk{
-		ID:      raw.ID,
-		Object:  raw.Object,
-		Created: raw.Created,
-		Model:   raw.Model,
-		Raw:     data,
+		ID:                raw.ID,
+		Object:            raw.Object,
+		Created:           raw.Created,
+		Model:             raw.Model,
+		Raw:               data,
+		SystemFingerprint: raw.SystemFingerprint,
+		ServiceTier:       raw.ServiceTier,
 	}
 
 	chunk.Choices = make([]llm.StreamChoice, len(raw.Choices))
